@@ -1,6 +1,6 @@
 function allExpInfos = dat2info(filename, ops)
 
-if nargin<1
+if nargin<1 || isempty(filename)
     [filename, folder] = uigetfile('G:\');
     filename = fullfile(folder, filename);
 end
@@ -116,9 +116,10 @@ for iExp = 1:nExps
     tiffName = fullfile(info.folder2p, [info.basename2p, '_001_001.tif']);
     [~, info.planeHeaders] = img.loadFrames(tiffName, 1, 1, 1);
     info.planeFrames = data.ops.iplane + ([1:data.ops.Nframes(iExp)]'-1) * info.nPlanes;
-    info.registrationChannel = 1;
-    if data.ops.AlignToRedChannel == 1
+    if isfield(data.ops, 'AlignToRedChannel') && (data.ops.AlignToRedChannel == 1)
         info.registrationChannel = 2;
+    else
+        info.registrationChannel = 1;
     end
     info.targetFrame = data.ops.mimg; % taken from channel used for registration
     info.meanFrame = data.ops.mimg1; % mean image always from channel 1 (green)
@@ -170,9 +171,15 @@ for iExp = 1:nExps
     if isfield(data, 'FcellNeu') && ~isempty(data.FcellNeu)
         info.Npil = double(data.FcellNeu{iExp}(roiIdx, :)');
     end
+    % add deconvolved traces of spiking rate
+    if isfield(data, 'sp') && ~isempty(data.sp)
+        info.spRate = data.sp{iExp}(roiIdx, :)';
+    end
     if isfield(data, 'opsNpil')
         info.opsNpil = data.opsNpil;
     end
+    % add stats of the ROIs
+    info.stat = data.stat(roiIdx);
     
     % add info about microscope
     if isfield(data.ops, 'microID')
