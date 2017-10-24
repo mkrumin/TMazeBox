@@ -15,9 +15,9 @@ for iFile = 1:nFiles
         meta = allInfos{iInfo};
         targetFolder = meta.folderProcessed;
         targetFile = fullfile(meta.folderProcessed, [meta.basenamePlane, '_ROI.mat']);
-%         if ~exist(targetFolder, 'dir')
-%             mkdir(targetFolder);
-%         end
-%         save(targetFile, 'meta');
+        if ~exist(targetFolder, 'dir')
+            mkdir(targetFolder);
+        end
+        save(targetFile, 'meta');
     end
 end
