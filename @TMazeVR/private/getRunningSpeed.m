@@ -1,11 +1,17 @@
-function ballData = getRunningSpeed(info)
+function ballData = getRunningSpeed(obj)
 
-filenames = dat.expFilePath(info.expRef, 'Timeline');
-
-try 
-    load(filenames{1});
-catch
-    load(filenames{2});
+if isempty(obj.dataTL)
+    filenames = dat.expFilePath(obj.info.expRef, 'Timeline');
+    try
+        data = load(filenames{1});
+    catch
+        data = load(filenames{2});
+    end
+    Timeline = data.Timeline;
+    clear data;
+    obj.dataTL = Timeline;
+else
+    Timeline = obj.dataTL;
 end
 
 nEvents = Timeline.ballUDPCount;
@@ -24,7 +30,7 @@ for iEvent = 1:nEvents
     ballData.forward(iEvent) = -vars(4);
     ballData.rotation(iEvent,:) = [vars(3), vars(5)];
     ballData.sideways(iEvent) = vars(2);
-%     ballData.total(iEvent) = norm([ballData.forward(iEvent), ballData.rotation(iEvent), ballData.sideways(iEvent)]);
+    %     ballData.total(iEvent) = norm([ballData.forward(iEvent), ballData.rotation(iEvent), ballData.sideways(iEvent)]);
 end
 
 nonZeroIdx = ballData.forward ~= 0 | [ballData.forward(2:end); 0] == 0 | ...

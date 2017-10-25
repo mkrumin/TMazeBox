@@ -1,5 +1,5 @@
-classdef TMazeVR
-    %TMAZEVR Summary of this class goes here
+classdef TMazeVR < handle
+    %   TMAZEVR Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
@@ -51,14 +51,11 @@ classdef TMazeVR
                 %                 fprintf('Plane %d/%d\n', iPlane, info.nPlanes);
                 try
                     if isfield(obj.data2p{iPlane}, 'collageMIP')
+                        % this is used if non-rigid registration was used
+                        % might be obsolete already as of 11-2017
                         obj.data2p{iPlane}.avgImage = obj.data2p{iPlane}.collageMIP;
                     else
-                        obj.data2p{iPlane}.avgImage = obj.data2p{iPlane}.targetFrame;
-                        tiffFileName = fullfile(obj.info.folderProcessed, sprintf('%s_plane%03d_registered_AVG.tiff', obj.info.basename2p, iPlane));
-                        if exist(tiffFileName, 'file')
-                            tmp = img.loadFrames(tiffFileName, 1, 1, 1);
-                            obj.data2p{iPlane}.avgImage = tmp;
-                        end
+                        obj.data2p{iPlane}.avgImage = obj.data2p{iPlane}.registeredMIP;
                     end
                 catch e
                     fprintf('Average image for plane %d not loaded\n', iPlane);
@@ -68,13 +65,19 @@ classdef TMazeVR
             end
             
             fprintf('Loading Timeline data...\n');
-            tmpTL = load(fullfile(obj.info.folderTLLocal, obj.info.basenameTL));
+            if exist(fullfile(obj.info.folderTLLocal, obj.info.basenameTL), 'file')
+                tmpTL = load(fullfile(obj.info.folderTLLocal, obj.info.basenameTL));
+            else
+                tmpTL = load(fullfile(obj.info.folderTL, obj.info.basenameTL));
+            end                
             obj.dataTL = tmpTL.Timeline;
             
             fprintf('Getting ball data...\n');
-            obj.dataBall = getRunningSpeed(obj.info);
+            obj.dataBall = getRunningSpeed(obj);
             
             fprintf('Loading eye-tracking data...\n');
+            % TODO make a better solution instead of this hard-coded path
+            % it is only necessary here because of the function et.getFrameTimes
             addpath('\\zserver\Code\MouseEyeTrack\');
             try
                 eyeFileBasename = dat.expFilePath(obj.info.expRef, 'eyeTracking');
@@ -87,7 +90,7 @@ classdef TMazeVR
                 end
                 obj.timesEye = et.getFrameTimes(eyeFileName);
             catch
-                fprintf('No eye data\n');
+                fprintf('No eye data found\n');
             end
             
             fprintf('Getting 2P frame times...\n');
