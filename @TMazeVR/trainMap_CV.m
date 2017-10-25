@@ -90,6 +90,10 @@ if ~isfield(optIn, 'cvFactor')
     optOut.cvFactor = 10; %
 end
 
+if ~isfield(optIn, 'errPower')
+    optOut.errPower = 2; %
+end
+
 if ~isfield(optIn, 'delay')
     optOut.delay = 0; %
 end
