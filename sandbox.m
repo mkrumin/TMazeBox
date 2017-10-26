@@ -22,6 +22,8 @@ for iPlane = TM.Planes
     end
 end
 
+% save(fullfile(folder, [info.expRef, '_TM.mat']), 'TM');
+
 %% plotting
 warning('off', 'MATLAB:nargchk:deprecated');
 iCell = 0;
@@ -53,4 +55,68 @@ for iCell = 1:nCellsPerFigure
     EV = 1-errVal(ind(iCell));
     title(EV);
 end
+
+%% resildual analysis
+if ~exist('TM', 'var')
+    [filename, folder] = uigetfile('G:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
+    load(fullfile(folder, filename));
+end
+
+TM.getResiduals;
+
+%% plotting maps with the corresponding residuals
+
+warning('off', 'MATLAB:nargchk:deprecated');
+iCell = 0;
+nRows = 4;
+nColumns = 6;
+nCellsPerFigure = nRows*nColumns/2;
+planeIdx = [];
+roiIdx = [];
+errVal = [];
+for iPlane = TM.Planes
+    planeIdx = cat(1, planeIdx, iPlane*ones(TM.nROIs(iPlane), 1));
+    roiIdx = cat(1, roiIdx, [1:TM.nROIs(iPlane)]');
+    errVal = cat(1, errVal, [TM.trainingData{iPlane}(:).errVals]');
+end
+
+[~, ind] = sort(errVal, 'ascend');
+nCells = length(errVal);
+sameCAxis = false;
+for iCell = 1:3*nCellsPerFigure
+    if (mod(iCell, nCellsPerFigure)==1)
+        figure;
+    end
+    iPlane = planeIdx(ind(iCell));
+    iROI = roiIdx(ind(iCell));
+    thAxis = TM.trainingData{iPlane}(iROI).zThetaBinCentres{2};
+    zAxis = TM.trainingData{iPlane}(iROI).zThetaBinCentres{1};
+    EV = 1-errVal(ind(iCell));
+
+    clim = minmax([TM.trainingData{iPlane}(iROI).zThetaMap(:)', ...
+        TM.trainingData{iPlane}(iROI).residualMap(:)']);
+    
+    iPlot = 2*(mod(iCell-1, nCellsPerFigure)+1)-1;
+    subplot(nRows, nColumns, iPlot);
+    imagesc(thAxis, zAxis, TM.trainingData{iPlane}(iROI).zThetaMap);
+    axis equal tight xy
+    if sameCAxis
+        caxis(clim);
+    else
+        colorbar;
+    end
+    title(EV);
+    
+    iPlot = 2*(mod(iCell-1, nCellsPerFigure)+1);
+    subplot(nRows, nColumns, iPlot);
+    imagesc(thAxis, zAxis, TM.trainingData{iPlane}(iROI).residualMap);
+    axis equal tight xy
+    if sameCAxis
+        caxis(clim);
+    else
+        colorbar;
+    end
+
+end
+
 
