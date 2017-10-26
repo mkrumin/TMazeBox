@@ -19,6 +19,7 @@ classdef TMazeVR < handle
         dataEye
         timesEye
         trainingData
+        residualData
         ellData
     end
     
