@@ -8,8 +8,9 @@ for iPlane = obj.Planes
     
     nCells = size(fData, 2);
     nTrials = obj.dataTMaze.nTrials;
+    options.econ = true;
     for iTrial = 1:nTrials
-        [thVector, zVector, fVector, ~] = buildVectors(obj, iTrial, tData, fData);
+        [thVector, zVector, fVector, ~] = buildVectors(obj, iTrial, tData, fData, options);
         residuals = nan(size(fVector));
         if ~isempty(thVector)
             for iCell = 1:nCells
