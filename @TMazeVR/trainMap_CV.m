@@ -35,7 +35,7 @@ endIdx = round([1:nChunks]/nChunks*nTrials);
 startIdx = [1, endIdx(1:end-1)+1];
 for iChunk = 1:nChunks
     trialIdx = scrambledIdx(startIdx(iChunk):endIdx(iChunk));
-    [thVector{iChunk}, zVector{iChunk}, fVector{iChunk}] = buildVectors(obj, trialIdx, tData, fData);
+    [thVector{iChunk}, zVector{iChunk}, fVector{iChunk}] = buildVectors(obj, trialIdx, tData, fData, options);
 end
 
 coords = cell(nChunks, 1);
@@ -98,6 +98,9 @@ if ~isfield(optIn, 'delay')
     optOut.delay = 0; %
 end
 
+if ~isfield(optIn, 'econ')
+    optOut.econ = true;
+end
 
 end %fillOptions();
 

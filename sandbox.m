@@ -15,10 +15,11 @@ info = data.meta;
 TM = TMazeVR(info.expRef);
 
 %% training
+options.econ = true;
 for iPlane = TM.Planes
     for iROI = 1:TM.nROIs(iPlane)
         fprintf('Plane #%d/%d, cell #%d/%d\n', iPlane, length(TM.Planes), iROI, TM.nROIs(iPlane))
-        TM.trainMap_CV(iPlane, iROI);
+        TM.trainMap_CV(iPlane, iROI, options);
     end
 end
 
