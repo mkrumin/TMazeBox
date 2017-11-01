@@ -15,7 +15,7 @@ tData = tData - options.delay;
 
 trialIdx = 1:length(obj.dataTMaze.contrastSequence);
 nTrials = length(trialIdx);
-[thAll, zAll, ~] = buildVectors(obj, trialIdx, tData, fData);
+[thAll, zAll, ~] = buildVectors(obj, trialIdx, tData, fData, options);
 
 zMin = min(abs(zAll));
 zMax = max(abs(zAll));
