@@ -31,7 +31,7 @@ nGroups = length(trialsGoR);
 %% Cutting F traces (trial-wise) for all the ROIs
 fprintf('Analyzing experiment %s\n', obj.expRef);
 zEdges = obj.trainingData{min(obj.Planes)}(1).zEdges;
-zEdges = linspace(zEdges(1), zEdges(end), 11);
+zEdges = linspace(zEdges(1), zEdges(end), 6);
 nZ = length(zEdges)-1;
 fMatrix = cell(max(obj.Planes), 1);
 for iPlane = obj.Planes
@@ -42,9 +42,11 @@ for iPlane = obj.Planes
     f0 = prctile(fData, 20);
     fData = bsxfun(@rdivide, bsxfun(@minus, fData, f0), f0);
     [fMatrix{iPlane}] = buildZBinnedTraces(obj, trialsAll, tData, fData, zEdges);
+    [resMatrix{iPlane}] = buildZBinnedResiduals(obj, iPlane, trialsAll, zEdges);
 end
 
 % reshape fMatrix to be nTrials x nZBins x nCells matrix
+resMatrix = cell2mat(reshape(resMatrix, 1, 1, []));
 fMatrix = cell2mat(reshape(fMatrix, 1, 1, []));
 
 % keyboard;
@@ -54,6 +56,7 @@ fMatrix = cell2mat(reshape(fMatrix, 1, 1, []));
 nCells = size(fMatrix, 3);
 
 nChars = 0;
+fprintf('Analyzing the raw data:\n'); 
 for iCell = 1:nCells
     fprintf(repmat('\b', 1, nChars));
     nChars = fprintf('ROI %d/%d\n', iCell, nCells);
@@ -114,6 +117,97 @@ for iCell = 1:nCells
     
 end
 fprintf('\n');
+
+%% and now the residuals 
+ 
+nChars = 0;
+fprintf('Analyzing the residuals:\n'); 
+for iCell = 1:nCells
+    fprintf(repmat('\b', 1, nChars));
+    nChars = fprintf('ROI %d/%d\n', iCell, nCells);
+    %   take traces of one ROI
+    data = resMatrix(:,:,iCell);
+    % normalize data to be between 0 and 1
+    minF = min(data(:));
+    maxF = max(data(:));
+    data = (data - minF)/(maxF-minF);
+    if all(all(isnan(data)))
+        % this ROI traces were not made in the previous section
+        continue;
+    end
+    
+    for iGroup = 1:nGroups
+        
+        % calculate the trials' statistics
+        tracesR = data(trialsGoR{iGroup}, :);
+        tracesL = data(trialsGoL{iGroup}, :);
+        
+        tracesC = data(trialsC{iGroup}, :);
+        tracesW = data(trialsW{iGroup}, :);
+        
+        tracesStimR = data(trialsStimR{iGroup}, :);
+        tracesStimL = data(trialsStimL{iGroup}, :);
+
+        
+%         % U-test
+%         try
+%         [pValRL(iCell, iGroup), hRL(iCell, iGroup), stat] = ranksum(nanmean(tracesR, 2), nanmean(tracesL, 2));
+%         [pValCW(iCell, iGroup), hCW(iCell, iGroup), stat] = ranksum(nanmean(tracesC, 2), nanmean(tracesW, 2));
+%         end
+        
+        % ROC analysis
+        for iBin = 1:nZ
+            valuesR = tracesR(:, iBin);
+            valuesL = tracesL(:, iBin);
+            valuesR = valuesR(~isnan(valuesR));
+            valuesL = valuesL(~isnan(valuesL));
+            [rocRLres(iBin, iCell, iGroup), tprRLres{iBin, iCell, iGroup}, fprRLres{iBin, iCell, iGroup}] ...
+                = rocArea(valuesR, valuesL);
+            
+            valuesR = tracesStimR(:, iBin);
+            valuesL = tracesStimL(:, iBin);
+            valuesR = valuesR(~isnan(valuesR));
+            valuesL = valuesL(~isnan(valuesL));
+            [rocStimRLres(iBin, iCell, iGroup), tprStimRLres{iBin, iCell, iGroup}, fprStimRLres{iBin, iCell, iGroup}] ...
+                = rocArea(valuesR, valuesL);
+            
+            valuesC = tracesC(:, iBin);
+            valuesW = tracesW(:, iBin);
+            valuesC = valuesC(~isnan(valuesC));
+            valuesW = valuesW(~isnan(valuesW));
+            [rocCWres(iBin, iCell, iGroup), tprCWres{iBin, iCell, iGroup}, fprCWres{iBin, iCell, iGroup}] ...
+                = rocArea(valuesC, valuesW);
+        end
+    end
+    
+end
+fprintf('\n');
+
+%% cell-by-cell plotting of ROCs
+
+nRows = 5;
+nColumns = nGroups;
+for iCell = 1:20
+    iRow = mod(iCell-1, nRows)+1;
+    if iRow==1
+        figure
+    end
+    for iGroup = 1:nGroups
+        subplot(nRows, nColumns, (iRow-1)*nGroups+iGroup);
+        zAxis = (zEdges(1:end-1)+zEdges(2:end))/2;
+        plot(zAxis, rocRL(:, iCell, iGroup), 'r', zAxis, rocRLres(:, iCell, iGroup), 'r:');
+        hold on;
+        plot(zAxis, rocCW(:, iCell, iGroup), 'b', zAxis, rocCWres(:, iCell, iGroup), 'b:');
+        plot(zAxis, rocStimRL(:, iCell, iGroup), 'c', zAxis, rocStimRLres(:, iCell, iGroup), 'c:');
+        
+        xlim([min(zEdges), max(zEdges)]);
+        ylim([0, 1]);
+        title(groupLabels{iGroup});
+        legend('ROC_{R-L}', 'ROC_{C-W}', 'ROC_{Stim R-L}');
+        xlabel('z [cm]');
+        ylabel();
+    end
+end
 
 %% plotting is done here
 

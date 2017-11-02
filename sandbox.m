@@ -59,7 +59,7 @@ end
 
 %% resildual analysis
 if ~exist('TM', 'var')
-    [filename, folder] = uigetfile('G:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
+    [filename, folder] = uigetfile('C:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
     load(fullfile(folder, filename));
 end
 
@@ -94,14 +94,14 @@ for iCell = 1:3*nCellsPerFigure
     zAxis = TM.trainingData{iPlane}(iROI).zThetaBinCentres{1};
     EV = 1-errVal(ind(iCell));
 
-    clim = minmax([TM.trainingData{iPlane}(iROI).zThetaMap(:)', ...
-        TM.trainingData{iPlane}(iROI).residualMap(:)']);
     
     iPlot = 2*(mod(iCell-1, nCellsPerFigure)+1)-1;
     subplot(nRows, nColumns, iPlot);
     imagesc(thAxis, zAxis, TM.trainingData{iPlane}(iROI).zThetaMap);
     axis equal tight xy
     if sameCAxis
+        clim = minmax([TM.trainingData{iPlane}(iROI).zThetaMap(:)', ...
+            TM.trainingData{iPlane}(iROI).residualMap(:)']);
         caxis(clim);
     else
         colorbar;
