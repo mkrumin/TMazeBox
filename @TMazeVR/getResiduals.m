@@ -37,8 +37,11 @@ for iPlane = obj.Planes
         thEdges = obj.trainingData{iPlane}(iCell).thEdges;
         optStd = obj.trainingData{iPlane}(iCell).optStd;
         hFilter = ndGaussian(optStd);
-        [resMap, ] = estMap([zVector, thVector], resVector(:, iCell), {zEdges, thEdges}, hFilter);
+        [resMap, ~] = estMap([zVector, thVector], resVector(:, iCell), {zEdges, thEdges}, hFilter);
         obj.trainingData{iPlane}(iCell).residualMap = resMap;
+        hFilter = ndGaussian([0.2 0.2]);
+        [rawResMap, ~] = estMap([zVector, thVector], resVector(:, iCell), {zEdges, thEdges}, hFilter);
+        obj.trainingData{iPlane}(iCell).rawResMap = rawResMap;
     end
 
 end
