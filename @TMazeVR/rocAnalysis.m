@@ -185,30 +185,46 @@ fprintf('\n');
 
 %% cell-by-cell plotting of ROCs
 
-nRows = 5;
+% sort cells by the z-theta fit quality
+errVector = [];
+for iPlane = obj.Planes
+    errVector = cat(1, errVector, [obj.trainingData{iPlane}(:).errVals]');
+end
+[~, cellIdx] = sort(errVector, 'ascend');
+
+nRows = 6;
 nColumns = nGroups;
-for iCell = 1:20
-    iRow = mod(iCell-1, nRows)+1;
+for cellNum = 1:36
+    iRow = mod(cellNum-1, nRows)+1;
+    iCell = cellIdx(cellNum);
     if iRow==1
         figure
     end
     for iGroup = 1:nGroups
         subplot(nRows, nColumns, (iRow-1)*nGroups+iGroup);
         zAxis = (zEdges(1:end-1)+zEdges(2:end))/2;
-        plot(zAxis, rocRL(:, iCell, iGroup), 'r', zAxis, rocRLres(:, iCell, iGroup), 'r:');
+        plot(zAxis, rocRL(:, iCell, iGroup), 'r', zAxis, rocRLres(:, iCell, iGroup), 'r--');
         hold on;
-        plot(zAxis, rocCW(:, iCell, iGroup), 'b', zAxis, rocCWres(:, iCell, iGroup), 'b:');
-        plot(zAxis, rocStimRL(:, iCell, iGroup), 'c', zAxis, rocStimRLres(:, iCell, iGroup), 'c:');
+        plot([min(zEdges), max(zEdges)], [0.5 0.5], 'k:')
+%         plot(zAxis, rocCW(:, iCell, iGroup), 'b', zAxis, rocCWres(:, iCell, iGroup), 'b:');
+%         plot(zAxis, rocStimRL(:, iCell, iGroup), 'c', zAxis, rocStimRLres(:, iCell, iGroup), 'c:');
         
         xlim([min(zEdges), max(zEdges)]);
         ylim([0, 1]);
         title(groupLabels{iGroup});
-        legend('ROC_{R-L}', 'ROC_{C-W}', 'ROC_{Stim R-L}');
-        xlabel('z [cm]');
-        ylabel();
+        if iRow==1 && iGroup == 1
+            legend('ROC', 'ROC_{res}');
+            xlabel('z [cm]');
+        end
+        if iGroup==1
+            ylabel(cellNum);
+        end
+
     end
 end
 
+%%
+return;
 %% plotting is done here
 
 nRows = 1;

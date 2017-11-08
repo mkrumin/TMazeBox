@@ -59,7 +59,7 @@ end
 
 %% resildual analysis
 if ~exist('TM', 'var')
-    [filename, folder] = uigetfile('C:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
+    [filename, folder] = uigetfile('G:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
     load(fullfile(folder, filename));
 end
 
@@ -83,7 +83,7 @@ end
 
 [~, ind] = sort(errVal, 'ascend');
 nCells = length(errVal);
-sameCAxis = false;
+sameCAxis = true;
 for iCell = 1:3*nCellsPerFigure
     if (mod(iCell, nCellsPerFigure)==1)
         figure;
@@ -97,20 +97,22 @@ for iCell = 1:3*nCellsPerFigure
     
     iPlot = 2*(mod(iCell-1, nCellsPerFigure)+1)-1;
     subplot(nRows, nColumns, iPlot);
-    imagesc(thAxis, zAxis, TM.trainingData{iPlane}(iROI).zThetaMap);
+    imagesc(thAxis, zAxis, TM.trainingData{iPlane}(iROI).rawDataMap);
     axis equal tight xy
     if sameCAxis
-        clim = minmax([TM.trainingData{iPlane}(iROI).zThetaMap(:)', ...
-            TM.trainingData{iPlane}(iROI).residualMap(:)']);
+%         clim = minmax([TM.trainingData{iPlane}(iROI).zThetaMap(:)', ...
+%             TM.trainingData{iPlane}(iROI).residualMap(:)']);
+        clim = minmax([TM.trainingData{iPlane}(iROI).rawDataMap(:)', ...
+            TM.trainingData{iPlane}(iROI).rawResMap(:)']);
         caxis(clim);
     else
         colorbar;
     end
-    title(EV);
+    title(sprintf('Cell %1.0f, EV %4.2f', iCell, EV));
     
     iPlot = 2*(mod(iCell-1, nCellsPerFigure)+1);
     subplot(nRows, nColumns, iPlot);
-    imagesc(thAxis, zAxis, TM.trainingData{iPlane}(iROI).residualMap);
+    imagesc(thAxis, zAxis, TM.trainingData{iPlane}(iROI).rawResMap);
     axis equal tight xy
     if sameCAxis
         caxis(clim);
