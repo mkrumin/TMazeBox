@@ -59,7 +59,11 @@ end
 
 %% resildual analysis
 if ~exist('TM', 'var')
+    if strfind(hostname, 'zenbook')
+    [filename, folder] = uigetfile('C:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
+    elseif strfind(hostname, 'zero')
     [filename, folder] = uigetfile('G:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
+    end
     load(fullfile(folder, filename));
 end
 
