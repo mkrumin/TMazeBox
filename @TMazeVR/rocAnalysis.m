@@ -14,7 +14,7 @@ for iCC = 1:nContrasts
     trialsW{iCC} = find(obj.dataTMaze.contrastSequence' == cc(iCC) & obj.dataTMaze.outcome == 'W');
     trialsStimR{iCC} = find(obj.dataTMaze.contrastSequence' == cc(iCC) & obj.dataTMaze.contrastSequence'>0);
     trialsStimL{iCC} = find(obj.dataTMaze.contrastSequence' == cc(iCC) & obj.dataTMaze.contrastSequence'<0);
-
+    
 end
 % trialsGoR{length(cc)+1} = find(obj.dataTMaze.report == 'R');
 % trialsGoL{length(cc)+1} = find(obj.dataTMaze.report == 'L');
@@ -31,7 +31,7 @@ nGroups = length(trialsGoR);
 %% Cutting F traces (trial-wise) for all the ROIs
 fprintf('Analyzing experiment %s\n', obj.expRef);
 zEdges = obj.trainingData{min(obj.Planes)}(1).zEdges;
-zEdges = linspace(zEdges(1), zEdges(end), 6);
+zEdges = linspace(zEdges(1), zEdges(end), 5);
 nZ = length(zEdges)-1;
 fMatrix = cell(max(obj.Planes), 1);
 for iPlane = obj.Planes
@@ -56,10 +56,10 @@ fMatrix = cell2mat(reshape(fMatrix, 1, 1, []));
 nCells = size(fMatrix, 3);
 
 nChars = 0;
-fprintf('Analyzing the raw data:\n'); 
+fprintf('Analyzing the raw data:\n ');
 for iCell = 1:nCells
     fprintf(repmat('\b', 1, nChars));
-    nChars = fprintf('ROI %d/%d\n', iCell, nCells);
+    nChars = fprintf('ROI %d/%d', iCell, nCells);
     %   take traces of one ROI
     data = fMatrix(:,:,iCell);
     % normalize data to be between 0 and 1
@@ -77,18 +77,13 @@ for iCell = 1:nCells
         tracesR = data(trialsGoR{iGroup}, :);
         tracesL = data(trialsGoL{iGroup}, :);
         
-        tracesC = data(trialsC{iGroup}, :);
-        tracesW = data(trialsW{iGroup}, :);
+        %         tracesC = data(trialsC{iGroup}, :);
+        %         tracesW = data(trialsW{iGroup}, :);
+        %
+        %         tracesStimR = data(trialsStimR{iGroup}, :);
+        %         tracesStimL = data(trialsStimL{iGroup}, :);
         
-        tracesStimR = data(trialsStimR{iGroup}, :);
-        tracesStimL = data(trialsStimL{iGroup}, :);
-
         
-%         % U-test
-%         try
-%         [pValRL(iCell, iGroup), hRL(iCell, iGroup), stat] = ranksum(nanmean(tracesR, 2), nanmean(tracesL, 2));
-%         [pValCW(iCell, iGroup), hCW(iCell, iGroup), stat] = ranksum(nanmean(tracesC, 2), nanmean(tracesW, 2));
-%         end
         
         % ROC analysis
         for iBin = 1:nZ
@@ -98,33 +93,38 @@ for iCell = 1:nCells
             valuesL = valuesL(~isnan(valuesL));
             [rocRL(iBin, iCell, iGroup), tprRL{iBin, iCell, iGroup}, fprRL{iBin, iCell, iGroup}] ...
                 = rocArea(valuesR, valuesL);
+            % U-test
+            try
+                [pValRL(iBin, iCell, iGroup), hRL(iBin, iCell, iGroup), stat] = ranksum(valuesR, valuesL);
+                %         [pValCW(iCell, iGroup), hCW(iCell, iGroup), stat] = ranksum(nanmean(tracesC, 2), nanmean(tracesW, 2));
+            end
             
-            valuesR = tracesStimR(:, iBin);
-            valuesL = tracesStimL(:, iBin);
-            valuesR = valuesR(~isnan(valuesR));
-            valuesL = valuesL(~isnan(valuesL));
-            [rocStimRL(iBin, iCell, iGroup), tprStimRL{iBin, iCell, iGroup}, fprStimRL{iBin, iCell, iGroup}] ...
-                = rocArea(valuesR, valuesL);
-            
-            valuesC = tracesC(:, iBin);
-            valuesW = tracesW(:, iBin);
-            valuesC = valuesC(~isnan(valuesC));
-            valuesW = valuesW(~isnan(valuesW));
-            [rocCW(iBin, iCell, iGroup), tprCW{iBin, iCell, iGroup}, fprCW{iBin, iCell, iGroup}] ...
-                = rocArea(valuesC, valuesW);
+            %             valuesR = tracesStimR(:, iBin);
+            %             valuesL = tracesStimL(:, iBin);
+            %             valuesR = valuesR(~isnan(valuesR));
+            %             valuesL = valuesL(~isnan(valuesL));
+            %             [rocStimRL(iBin, iCell, iGroup), tprStimRL{iBin, iCell, iGroup}, fprStimRL{iBin, iCell, iGroup}] ...
+            %                 = rocArea(valuesR, valuesL);
+            %
+            %             valuesC = tracesC(:, iBin);
+            %             valuesW = tracesW(:, iBin);
+            %             valuesC = valuesC(~isnan(valuesC));
+            %             valuesW = valuesW(~isnan(valuesW));
+            %             [rocCW(iBin, iCell, iGroup), tprCW{iBin, iCell, iGroup}, fprCW{iBin, iCell, iGroup}] ...
+            %                 = rocArea(valuesC, valuesW);
         end
     end
     
 end
 fprintf('\n');
 
-%% and now the residuals 
- 
+%% and now the residuals
+
 nChars = 0;
-fprintf('Analyzing the residuals:\n'); 
-for iCell = 1:nCells
+fprintf('Analyzing the residuals:\n ');
+for iCell = nCells:-1:1
     fprintf(repmat('\b', 1, nChars));
-    nChars = fprintf('ROI %d/%d\n', iCell, nCells);
+    nChars = fprintf('ROI %d/%d', nCells-iCell+1, nCells);
     %   take traces of one ROI
     data = resMatrix(:,:,iCell);
     % normalize data to be between 0 and 1
@@ -136,52 +136,125 @@ for iCell = 1:nCells
         continue;
     end
     
-    for iGroup = 1:nGroups
+    for iGroup = nGroups:-1:1
         
         % calculate the trials' statistics
         tracesR = data(trialsGoR{iGroup}, :);
         tracesL = data(trialsGoL{iGroup}, :);
         
-        tracesC = data(trialsC{iGroup}, :);
-        tracesW = data(trialsW{iGroup}, :);
+        %         tracesC = data(trialsC{iGroup}, :);
+        %         tracesW = data(trialsW{iGroup}, :);
+        %
+        %         tracesStimR = data(trialsStimR{iGroup}, :);
+        %         tracesStimL = data(trialsStimL{iGroup}, :);
         
-        tracesStimR = data(trialsStimR{iGroup}, :);
-        tracesStimL = data(trialsStimL{iGroup}, :);
-
         
-%         % U-test
-%         try
-%         [pValRL(iCell, iGroup), hRL(iCell, iGroup), stat] = ranksum(nanmean(tracesR, 2), nanmean(tracesL, 2));
-%         [pValCW(iCell, iGroup), hCW(iCell, iGroup), stat] = ranksum(nanmean(tracesC, 2), nanmean(tracesW, 2));
-%         end
         
         % ROC analysis
-        for iBin = 1:nZ
+        for iBin = nZ:-1:1
             valuesR = tracesR(:, iBin);
             valuesL = tracesL(:, iBin);
             valuesR = valuesR(~isnan(valuesR));
             valuesL = valuesL(~isnan(valuesL));
             [rocRLres(iBin, iCell, iGroup), tprRLres{iBin, iCell, iGroup}, fprRLres{iBin, iCell, iGroup}] ...
                 = rocArea(valuesR, valuesL);
+            try
+                [pValRLres(iBin, iCell, iGroup), hRLres(iBin, iCell, iGroup), stat] = ranksum(valuesR, valuesL);
+                %         [pValCW(iCell, iGroup), hCW(iCell, iGroup), stat] = ranksum(nanmean(tracesC, 2), nanmean(tracesW, 2));
+            end
             
-            valuesR = tracesStimR(:, iBin);
-            valuesL = tracesStimL(:, iBin);
-            valuesR = valuesR(~isnan(valuesR));
-            valuesL = valuesL(~isnan(valuesL));
-            [rocStimRLres(iBin, iCell, iGroup), tprStimRLres{iBin, iCell, iGroup}, fprStimRLres{iBin, iCell, iGroup}] ...
-                = rocArea(valuesR, valuesL);
-            
-            valuesC = tracesC(:, iBin);
-            valuesW = tracesW(:, iBin);
-            valuesC = valuesC(~isnan(valuesC));
-            valuesW = valuesW(~isnan(valuesW));
-            [rocCWres(iBin, iCell, iGroup), tprCWres{iBin, iCell, iGroup}, fprCWres{iBin, iCell, iGroup}] ...
-                = rocArea(valuesC, valuesW);
+            %             valuesR = tracesStimR(:, iBin);
+            %             valuesL = tracesStimL(:, iBin);
+            %             valuesR = valuesR(~isnan(valuesR));
+            %             valuesL = valuesL(~isnan(valuesL));
+            %             [rocStimRLres(iBin, iCell, iGroup), tprStimRLres{iBin, iCell, iGroup}, fprStimRLres{iBin, iCell, iGroup}] ...
+            %                 = rocArea(valuesR, valuesL);
+            %
+            %             valuesC = tracesC(:, iBin);
+            %             valuesW = tracesW(:, iBin);
+            %             valuesC = valuesC(~isnan(valuesC));
+            %             valuesW = valuesW(~isnan(valuesW));
+            %             [rocCWres(iBin, iCell, iGroup), tprCWres{iBin, iCell, iGroup}, fprCWres{iBin, iCell, iGroup}] ...
+            %                 = rocArea(valuesC, valuesW);
         end
     end
     
 end
 fprintf('\n');
+
+%% summary plotting
+
+keyboard;
+%% summary rasters
+warning('off', 'MATLAB:nargchk:deprecated');
+
+figure;
+zz = (zEdges(1:end-1) + zEdges(2:end))/2;
+for iGroup =1:nGroups
+    for iBin = 1:nZ
+        subplot(nZ, nGroups, (iBin-1)*nGroups + iGroup);
+        idx = ~hRL(nZ-iBin+1, :, iGroup) & ~hRLres(nZ-iBin+1, :, iGroup);
+        plot(rocRL(nZ-iBin+1, idx, iGroup), rocRLres(nZ-iBin+1, idx, iGroup), 'o', 'Color', [0.8 0.8 0.8]);
+        hold on;
+        idx = hRL(nZ-iBin+1, :, iGroup) & ~hRLres(nZ-iBin+1, :, iGroup);
+        plot(rocRL(nZ-iBin+1, idx, iGroup), rocRLres(nZ-iBin+1, idx, iGroup), 'o', 'Color', [0 0.5 0]);
+        idx = ~hRL(nZ-iBin+1, :, iGroup) & hRLres(nZ-iBin+1, :, iGroup);
+        plot(rocRL(nZ-iBin+1, idx, iGroup), rocRLres(nZ-iBin+1, idx, iGroup), 'o', 'Color', [0 0 0.8]);
+        idx = hRL(nZ-iBin+1, :, iGroup) & hRLres(nZ-iBin+1, :, iGroup);
+        plot(rocRL(nZ-iBin+1, idx, iGroup), rocRLres(nZ-iBin+1, idx, iGroup), 'o', 'Color', [0.8 0 0.8]);
+        xlim = [0 1];
+        ylim = [0 1];
+        hold on;
+        plot([0 1], [0 1], 'k:')
+        plot([0.5 0.5], [0 1], 'k:')
+        plot([0 1], [0.5 0.5], 'k:')
+        axis equal tight
+        box off
+        if iGroup == 1
+            ylabel(sprintf('z = %2.0f [cm]', zz(nZ-iBin+1)));
+        end
+        if iBin == 1
+            title(groupLabels{iGroup});
+        end
+
+    end
+end
+
+%% summary histograms
+figure;
+zz = (zEdges(1:end-1) + zEdges(2:end))/2;
+rocEdges = 0:0.05:1;
+for iGroup =1:nGroups
+    for iBin = 1:nZ
+        subplot(nZ, nGroups, (iBin-1)*nGroups + iGroup);
+        histogram(rocRL(nZ-iBin+1, :, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
+            'EdgeColor', [0 0.7 0], 'FaceColor', 'none', 'LineStyle', ':','LineWidth', 1);
+        hold on;
+        idx = hRL(nZ-iBin+1, :, iGroup);
+        histogram(rocRL(nZ-iBin+1, idx, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
+            'EdgeColor', [0 0.7 0], 'FaceColor', 'none', 'LineWidth', 2);
+        histogram(rocRLres(nZ-iBin+1, :, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
+            'EdgeColor', [0 0 0.7], 'FaceColor', 'none', 'LineStyle', ':','LineWidth', 1);
+        idx = hRLres(nZ-iBin+1, :, iGroup);
+        histogram(rocRLres(nZ-iBin+1, idx, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
+            'EdgeColor', [0 0 0.7], 'FaceColor', 'none', 'LineWidth', 2);
+        xlim = [0 1];
+%         ylim = [0 1];
+        hold on;
+%         plot([0 1], [0 1], 'k:')
+        plot([0.5 0.5], [0 1], 'k:')
+%         plot([0 1], [0.5 0.5], 'k:')
+%         axis equal tight
+        box off
+        if iGroup == 1
+            ylabel(sprintf('z = %2.0f [cm]', zz(nZ-iBin+1)));
+        end
+        if iBin == 1
+            title(groupLabels{iGroup});
+        end
+
+    end
+end
 
 %% cell-by-cell plotting of ROCs
 
@@ -206,8 +279,8 @@ for cellNum = 1:36
         plot(zAxis, rocRL(:, iCell, iGroup), 'r', zAxis, rocRLres(:, iCell, iGroup), 'r--');
         hold on;
         plot([min(zEdges), max(zEdges)], [0.5 0.5], 'k:')
-%         plot(zAxis, rocCW(:, iCell, iGroup), 'b', zAxis, rocCWres(:, iCell, iGroup), 'b:');
-%         plot(zAxis, rocStimRL(:, iCell, iGroup), 'c', zAxis, rocStimRLres(:, iCell, iGroup), 'c:');
+        %         plot(zAxis, rocCW(:, iCell, iGroup), 'b', zAxis, rocCWres(:, iCell, iGroup), 'b:');
+        %         plot(zAxis, rocStimRL(:, iCell, iGroup), 'c', zAxis, rocStimRLres(:, iCell, iGroup), 'c:');
         
         xlim([min(zEdges), max(zEdges)]);
         ylim([0, 1]);
@@ -219,7 +292,7 @@ for cellNum = 1:36
         if iGroup==1
             ylabel(cellNum);
         end
-
+        
     end
 end
 
@@ -271,13 +344,19 @@ drawnow;
 %%
 function [trialsOut, groupLabels] = groupTrials(trialsIn, cc)
 
-groupLabels = {'High % L', 'Low % L', '0 %', 'Low % R', 'High % R', 'All %'};
-bins = {[-50, -25];...
-    [-12, -6];...
+groupLabels = {'Stim L', '0 %', 'Stim R', 'All Stim'};
+bins = {[-50, -25, -12, -6];...
     [0];...
-    [6, 12];...
-    [25, 50];...
+    [6, 12, 25, 50];...
     [cc]};
+
+% groupLabels = {'High % L', 'Low % L', '0 %', 'Low % R', 'High % R', 'All %'};
+% bins = {[-50, -25];...
+%     [-12, -6];...
+%     [0];...
+%     [6, 12];...
+%     [25, 50];...
+%     [cc]};
 
 
 % groupLabels = {'-50%', '-25%', '-12%', '-6%', '0%', '6%', '12%', '25%', '50%', 'All %'};
