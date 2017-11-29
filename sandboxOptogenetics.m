@@ -8,6 +8,8 @@ excludeDate = {'2000-01-01'};
 fitPsycho = true;
 alpha = 0.1;
 excludeC = NaN;
+groups2plot = 1:4;
+% groups2plot = 2:3;
 
 fprintf('Getting the list of experiments..');
 tic
@@ -116,9 +118,6 @@ end
 pcLineStyle = {'k'; 'r'; 'b'; 'm'};
 pcLineWidth = 3;
 groupName = {'none'; 'left'; 'right'; 'both'};
-nGroups = length(idx);
-groups2plot = 1:nGroups;
-% groups2plot = 2:3;
 
 for iGroup = groups2plot
     cc{iGroup} = unique(contrast(idx{iGroup}));
@@ -162,7 +161,7 @@ end
 
 fprintf('Plotting..')
 tic
-figure
+hFig = figure;
 
 if fitPsycho
     for iGroup = groups2plot
@@ -187,6 +186,7 @@ xlim([-50 50]);
 ylim([0 1]);
 plot([0 0], ylim, 'k:')
 plot(xlim, [0.5 0.5], 'k:')
+ax.Color = hFig.Color;
 ax.XTick = unique([cc{:}]);
 ax.YTick = [0 0.5 1];
 ax.XLabel.String = 'Contrast [%]';
@@ -206,6 +206,21 @@ for iCurve = groups2plot
         tx.FontSize = 10;
         tx.FontWeight = 'bold';
     end
+end
+
+ccAll = unique([cc{:}]);
+nnAll = zeros(size(ccAll));
+for iC = 1:length(ccAll)
+    for iGroup = groups2plot
+        nnAll(iC) = nnAll(iC) + sum(nn{iGroup}(cc{iGroup} == ccAll(iC)));
+    end
+    tx = text(ccAll(iC), 0, sprintf('%1.0f', nnAll(iC)));
+    tx.Color = [0 0 0];
+    tx.HorizontalAlignment = 'Center';
+    tx.VerticalAlignment = 'Bottom';
+    tx.FontSize = 12;
+    tx.FontWeight = 'bold';
+    
 end
 
 drawnow;
