@@ -1,5 +1,16 @@
 % this script is for trying things out with inactivations experiments
 
+clear;
+animalName = 'MK027';
+startDate = '2017-11-08';
+endDate = '2018-11-29';
+excludeDate = {'2000-01-01'};
+fitPsycho = true;
+alpha = 0.1;
+excludeC = NaN;
+
+fprintf('Getting the list of experiments..');
+tic
 currFolder = cd('\\zserver\Code\Rigging\main');
 [ExpRefOld, dateOld] = dat.listExps('MK027');
 filenamesOld = dat.expFilePath(ExpRefOld, 'tmaze', 'master');
@@ -13,13 +24,17 @@ filenames = [filenamesOld; filenamesNew];
 [expDate, idx] = sort(expDate, 'ascend');
 ExpRef = ExpRef(idx);
 filenames = filenames(idx);
+fprintf('.done (%4.2f sec)\n', toc);
 
 %%
 % optogenetic exps didn;t start before that
-idxRecent = find(expDate >= datenum('2017-11-08'));
-
+idxRecent = find(expDate >= datenum(startDate) & ...
+    expDate <= datenum(endDate) & ...
+    ~ismember(expDate, datenum(excludeDate)));
 
 %%
+fprintf('Loading the data..');
+tic
 tmazeData = struct('EXP', [], 'SESSION', []);
 iData = 0;
 for iExp = 1:length(idxRecent)
@@ -30,8 +45,11 @@ for iExp = 1:length(idxRecent)
         tmazeData(iData) = data;
     end
 end
-    
-%%
+fprintf('.done (%4.2f sec)\n', toc);
+
+%% Combine all the sessions together
+fprintf('Pooling the data..')
+tic
 res = struct;
 nSessions = length(tmazeData);
 for iSession = 1:nSessions
@@ -71,7 +89,7 @@ for iSession = 1:nSessions
 end
 res = res(:);
 
-%% combine all the sessions
+% combine all the sessions
 
 contrast = cell2mat({res.contrast}');
 outcome = cell2mat({res.outcome}');
@@ -81,6 +99,7 @@ random = cell2mat({res.random}');
 optiStim = cell2mat({res.optiStim}');
 
 idx = finished & random;
+% idx = random;
 % idx = finished;
 
 idxNone = idx & ~optiStim(:, 1) & ~optiStim(:,2);
@@ -88,69 +107,107 @@ idxLeft = idx & optiStim(:, 1) & ~optiStim(:,2);
 idxRight = idx & ~optiStim(:, 1) & optiStim(:,2);
 idxBoth = idx & optiStim(:, 1) & optiStim(:,2);
 
-%%
-alpha = 0.05;
-excludeC = [-25, 25];
-
-ccNone = unique(contrast(idxNone));
-ccNone = ccNone(~ismember(ccNone, excludeC));
-nnNone = nan(size(ccNone));
-nrNone = nan(size(ccNone));
-for iC = 1:length(ccNone)
-    nnNone(iC) = sum(contrast(idxNone) == ccNone(iC));
-    idxC = idxNone & contrast == ccNone(iC);
-    nrNone(iC) = sum(behavior(idxC) == 'R');
+idx = {idxNone; idxLeft; idxRight; idxBoth};
+if fitPsycho
+    LineStyle = {'.k'; '.r'; '.b'; '.m'};
+else
+    LineStyle = {'.-k'; '.-r'; '.-b'; '.-m'};
 end
-[ppNone, ciNone]= binofit(nrNone, nnNone, alpha);
+pcLineStyle = {'k'; 'r'; 'b'; 'm'};
+pcLineWidth = 3;
+groupName = {'none'; 'left'; 'right'; 'both'};
+nGroups = length(idx);
+groups2plot = 1:nGroups;
+% groups2plot = 2:3;
 
-ccLeft = unique(contrast(idxLeft));
-ccLeft = ccLeft(~ismember(ccLeft, excludeC));
-nnLeft = nan(size(ccLeft));
-nrLeft = nan(size(ccLeft));
-for iC = 1:length(ccLeft)
-    nnLeft(iC) = sum(contrast(idxLeft) == ccLeft(iC));
-    idxC = idxLeft & contrast == ccLeft(iC);
-    nrLeft(iC) = sum(behavior(idxC) == 'R');
+for iGroup = groups2plot
+    cc{iGroup} = unique(contrast(idx{iGroup}));
+    cc{iGroup} = cc{iGroup}(~ismember(cc{iGroup}, excludeC));
+    nn{iGroup} = nan(size(cc{iGroup}));
+    nr{iGroup} = nan(size(cc{iGroup}));
+    for iC = 1:length(cc{iGroup})
+        nn{iGroup}(iC) = sum(contrast(idx{iGroup}) == cc{iGroup}(iC));
+        idxC = idx{iGroup} & contrast == cc{iGroup}(iC);
+        nr{iGroup}(iC) = sum(behavior(idxC) == 'R');
+    end
+    [pp{iGroup}, ci{iGroup}]= binofit(nr{iGroup}, nn{iGroup}, alpha);
 end
-[ppLeft, ciLeft]= binofit(nrLeft, nnLeft, alpha);
 
-ccRight = unique(contrast(idxRight));
-ccRight = ccRight(~ismember(ccRight, excludeC));
-nnRight = nan(size(ccRight));
-nrRight = nan(size(ccRight));
-for iC = 1:length(ccRight)
-    nnRight(iC) = sum(contrast(idxRight) == ccRight(iC));
-    idxC = idxRight & contrast == ccRight(iC);
-    nrRight(iC) = sum(behavior(idxC) == 'R');
+fprintf('.done (%4.2f sec)\n', toc);
+
+%% Fitting psychometric curves
+
+if fitPsycho
+    fprintf('Fitting psychometric curves..');
+    tic
+    addpath('\\zserver\Code\Psychofit\');
+    nFits = 10;
+    modelType = 'erf_psycho_2gammas';
+    parsMin = [-100, 0, 0, 0];
+    parsMax = [100, 100, 1, 1];
+    xx = [-50:50]';
+    for iGroup = groups2plot
+        parsStart = [mean(cc{iGroup}), 10, 0.1, 0.1];
+        [pars L]= mle_fit_psycho([cc{iGroup}, nn{iGroup}, pp{iGroup}]', modelType, ...
+            parsStart, parsMin, parsMax, nFits);
+        yy{iGroup} = erf_psycho_2gammas(pars, xx);
+    end
+    
+    fprintf('.done (%4.2f sec)\n', toc);
+    rmpath('\\zserver\Code\Psychofit\');
 end
-[ppRight, ciRight]= binofit(nrRight, nnRight, alpha);
 
-ccBoth = unique(contrast(idxBoth));
-ccBoth = ccBoth(~ismember(ccBoth, excludeC));
-nnBoth = nan(size(ccBoth));
-nrBoth = nan(size(ccBoth));
-for iC = 1:length(ccBoth)
-    nnBoth(iC) = sum(contrast(idxBoth) == ccBoth(iC));
-    idxC = idxBoth & contrast == ccBoth(iC);
-    nrBoth(iC) = sum(behavior(idxC) == 'R');
-end
-[ppBoth, ciBoth]= binofit(nrBoth, nnBoth, alpha);
 
-%%
+%% Plotting is done here
 
+fprintf('Plotting..')
+tic
 figure
-errorbar(ccNone, ppNone, ciNone(:,1)-ppNone, ciNone(:,2)-ppNone, 'o-k')
-ax = gca;
-hold on;
-errorbar(ccLeft, ppLeft, ciLeft(:,1)-ppLeft, ciLeft(:,2)-ppLeft, 'o-r')
-errorbar(ccRight, ppRight, ciRight(:,1)-ppRight, ciRight(:,2)-ppRight, 'o-b')
-% errorbar(ccBoth, ppBoth, ciBoth(:,1)-ppBoth, ciBoth(:,2)-ppBoth, 'o-')
+
+if fitPsycho
+    for iGroup = groups2plot
+        plot(xx, yy{iGroup}, pcLineStyle{iGroup}, 'LineWidth', pcLineWidth);
+        hold on;
+    end
+end
+
+allLegends = cell(0);
+% er = nan(length(groups2plot), 1);
+for iGroup = groups2plot
+    er(iGroup) = errorbar(cc{iGroup}, pp{iGroup}, ...
+        ci{iGroup}(:,1)-pp{iGroup}, ci{iGroup}(:,2)-pp{iGroup}, LineStyle{iGroup});
+    er(iGroup).MarkerSize = 30;
+    ax = gca;
+    iLegend = find(groups2plot == iGroup);
+    allLegends{iLegend} = sprintf('%s (%2.0f)', groupName{iGroup}, sum(nn{iGroup}));
+end
 box off
 
 xlim([-50 50]);
 ylim([0 1]);
 plot([0 0], ylim, 'k:')
 plot(xlim, [0.5 0.5], 'k:')
-ax.XTick = unique([ccNone; ccLeft; ccRight; ccBoth]);
+ax.XTick = unique([cc{:}]);
 ax.YTick = [0 0.5 1];
-legend('none', 'left', 'right', 'both');
+ax.XLabel.String = 'Contrast [%]';
+ax.YLabel.String = 'Prob (Going Right)';
+ax.Title.String = sprintf('%s, starting from %s', animalName, startDate);
+axis square;
+legend(allLegends);
+
+% write the number of trials near each data point
+
+for iCurve = groups2plot
+    for iPoint = 1:length(nn{iCurve})
+        tx = text(cc{iCurve}(iPoint)+1, pp{iCurve}(iPoint), sprintf('%1.0f', nn{iCurve}(iPoint)));
+        tx.Color = er(iCurve).Color;
+        tx.HorizontalAlignment = 'Left';
+        tx.VerticalAlignment = 'Middle';
+        tx.FontSize = 10;
+        tx.FontWeight = 'bold';
+    end
+end
+
+drawnow;
+
+fprintf('.done (%4.2f sec)\n', toc);
