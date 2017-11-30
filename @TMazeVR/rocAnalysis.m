@@ -184,9 +184,48 @@ fprintf('\n');
 
 %% summary plotting
 
-keyboard;
-%% summary rasters
+% keyboard;
 warning('off', 'MATLAB:nargchk:deprecated');
+
+%% summary histograms
+figure;
+zz = (zEdges(1:end-1) + zEdges(2:end))/2;
+rocEdges = -0.025:0.05:1.025;
+for iGroup =1:nGroups
+    for iBin = 1:nZ
+        subplot(nZ, nGroups, (iBin-1)*nGroups + iGroup);
+        histogram(rocRL(nZ-iBin+1, :, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
+            'EdgeColor', [0 0.7 0], 'FaceColor', 'none', 'LineStyle', '-','LineWidth', 1);
+        hold on;
+%         idx = hRL(nZ-iBin+1, :, iGroup);
+%         histogram(rocRL(nZ-iBin+1, idx, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
+%             'EdgeColor', [0 0.7 0], 'FaceColor', 'none', 'LineWidth', 2);
+        histogram(rocRLres(nZ-iBin+1, :, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
+            'EdgeColor', [0 0 0.7], 'FaceColor', 'none', 'LineStyle', '-','LineWidth', 1);
+%         idx = hRLres(nZ-iBin+1, :, iGroup);
+%         histogram(rocRLres(nZ-iBin+1, idx, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
+%             'EdgeColor', [0 0 0.7], 'FaceColor', 'none', 'LineWidth', 2);
+        xlim([0 1]);
+%         ylim([0 1]);
+        hold on;
+%         plot([0 1], [0 1], 'k:')
+        plot([0.5 0.5], [0 1], 'k:')
+%         plot([0 1], [0.5 0.5], 'k:')
+%         axis equal tight
+        box off
+        if iGroup == 1
+            ylabel(sprintf('z = %2.0f [cm]', zz(nZ-iBin+1)));
+        end
+        if iBin == 1
+            title(groupLabels{iGroup});
+        end
+
+    end
+end
+
+%%
+return;
+%% summary rasters
 
 figure;
 zz = (zEdges(1:end-1) + zEdges(2:end))/2;
@@ -202,49 +241,13 @@ for iGroup =1:nGroups
         plot(rocRL(nZ-iBin+1, idx, iGroup), rocRLres(nZ-iBin+1, idx, iGroup), 'o', 'Color', [0 0 0.8]);
         idx = hRL(nZ-iBin+1, :, iGroup) & hRLres(nZ-iBin+1, :, iGroup);
         plot(rocRL(nZ-iBin+1, idx, iGroup), rocRLres(nZ-iBin+1, idx, iGroup), 'o', 'Color', [0.8 0 0.8]);
-        xlim = [0 1];
-        ylim = [0 1];
+        xlim([0 1]);
+        ylim([0 1]);
         hold on;
         plot([0 1], [0 1], 'k:')
         plot([0.5 0.5], [0 1], 'k:')
         plot([0 1], [0.5 0.5], 'k:')
         axis equal tight
-        box off
-        if iGroup == 1
-            ylabel(sprintf('z = %2.0f [cm]', zz(nZ-iBin+1)));
-        end
-        if iBin == 1
-            title(groupLabels{iGroup});
-        end
-
-    end
-end
-
-%% summary histograms
-figure;
-zz = (zEdges(1:end-1) + zEdges(2:end))/2;
-rocEdges = 0:0.05:1;
-for iGroup =1:nGroups
-    for iBin = 1:nZ
-        subplot(nZ, nGroups, (iBin-1)*nGroups + iGroup);
-        histogram(rocRL(nZ-iBin+1, :, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
-            'EdgeColor', [0 0.7 0], 'FaceColor', 'none', 'LineStyle', ':','LineWidth', 1);
-        hold on;
-        idx = hRL(nZ-iBin+1, :, iGroup);
-        histogram(rocRL(nZ-iBin+1, idx, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
-            'EdgeColor', [0 0.7 0], 'FaceColor', 'none', 'LineWidth', 2);
-        histogram(rocRLres(nZ-iBin+1, :, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
-            'EdgeColor', [0 0 0.7], 'FaceColor', 'none', 'LineStyle', ':','LineWidth', 1);
-        idx = hRLres(nZ-iBin+1, :, iGroup);
-        histogram(rocRLres(nZ-iBin+1, idx, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
-            'EdgeColor', [0 0 0.7], 'FaceColor', 'none', 'LineWidth', 2);
-        xlim = [0 1];
-%         ylim = [0 1];
-        hold on;
-%         plot([0 1], [0 1], 'k:')
-        plot([0.5 0.5], [0 1], 'k:')
-%         plot([0 1], [0.5 0.5], 'k:')
-%         axis equal tight
         box off
         if iGroup == 1
             ylabel(sprintf('z = %2.0f [cm]', zz(nZ-iBin+1)));
