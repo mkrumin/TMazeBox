@@ -1,6 +1,9 @@
 % dat2info wrapper script (including saving files)
 
-[filename, folder] = uigetfile('G:\Suite2pProcessed\F\JL008\2017-07-15\1708\', '', '', 'multiselect', 'on');
+% use this for older datasets
+addpath('\\zserver\Code\Rigging\main', '-begin');
+
+[filename, folder] = uigetfile('G:\Suite2pProcessed\F\JL008\2017-09-28', '', '', 'multiselect', 'on');
 if ~iscell(filename)
     filename = {filename};
 end
@@ -21,3 +24,5 @@ for iFile = 1:nFiles
         save(targetFile, 'meta');
     end
 end
+
+rmpath('\\zserver\Code\Rigging\main');

@@ -21,7 +21,11 @@ try
     % first trying to load a local copy of Timeline
     load(fullfile(info.folderTLLocal, info.basenameTL));
 catch
+    try
     load(fullfile(info.folderTL, info.basenameTL));
+    catch
+        % something is wrong with paths
+    end
 end
 
 nInputs=length(Timeline.hw.inputs);

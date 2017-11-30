@@ -11,9 +11,13 @@ end
 
 fprintf('Loading data from %s ...\n', filename)
 data = load(filename); % loading the dat structure
-data = data.dat; % otherwise structure dat is conflicting with the +dat package
+if isfield(data, 'dat')
+    data = data.dat; % otherwise structure dat is conflicting with the +dat package
+else
+    % do nothing, data is already the required structure
+end
 
-% figureing out which experiments are included in these data
+% figuring out which experiments are included in these data
 
 if isfield(data.ops, 'db_orig')
     animal = data.ops.db_orig.mouse_name;

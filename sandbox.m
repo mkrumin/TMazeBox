@@ -1,6 +1,6 @@
 % let's construct the TMazeVR objects
 
-[filename, folder] = uigetfile('G:\Processing\JL008\2017-07-15\1708\', '', '', 'multiselect', 'on');
+[filename, folder] = uigetfile('G:\Processing\JL008\2017-07-27\', '', '', 'multiselect', 'on');
 if ~iscell(filename)
     filename = {filename};
 end
@@ -15,15 +15,56 @@ info = data.meta;
 TM = TMazeVR(info.expRef);
 
 %% training
-options.econ = true;
-for iPlane = TM.Planes
-    for iROI = 1:TM.nROIs(iPlane)
-        fprintf('Plane #%d/%d, cell #%d/%d\n', iPlane, length(TM.Planes), iROI, TM.nROIs(iPlane))
-        TM.trainMap_CV(iPlane, iROI, options);
+% for older datasets
+addpath('\\zserver\Code\Rigging\main', '-begin');
+
+folder = 'G:\DATA\';
+
+allExpRefs = {'2017-07-15_1708_JL008';...
+    '2017-07-27_1433_JL008';...
+    '2017-07-28_1359_JL008';...
+    '2017-08-12_1056_JL008';...
+    '2017-08-14_1414_JL008'};
+
+% someting is wrong with these datasets, photodiode signal?
+% '2017-09-18_1707_JL008';
+% '2017-09-19_1117_JL008';...
+% '2017-09-23_1539_JL008';...
+% '2017-09-24_1558_JL008';...
+% '2017-09-25_1445_JL008';...
+% '2017-09-26_1222_JL008';...
+% '2017-09-28_1057_JL008';
+
+for iExpRef = 1:length(allExpRefs)
+    ExpRef = allExpRefs{iExpRef};
+    TM = TMazeVR(ExpRef);
+    options.econ = true;
+    for iPlane = TM.Planes
+        for iROI = 1:TM.nROIs(iPlane)
+            fprintf('%s Plane #%d/%d, cell #%d/%d\n', ExpRef, iPlane, length(TM.Planes), iROI, TM.nROIs(iPlane))
+            TM.trainMap_CV(iPlane, iROI, options);
+        end
     end
+    fprintf('Calculating residuals..');
+    TM.getResiduals;
+    fprintf('.done\n');
+%     save(fullfile(folder, [ExpRef, '_TM.mat']), 'TM');
 end
 
-% save(fullfile(folder, [info.expRef, '_TM.mat']), 'TM');
+rmpath('\\zserver\Code\Rigging\main');
+
+
+%% loading some data
+
+allExpRefs = {'2017-07-15_1708_JL008';...
+    '2017-07-27_1433_JL008';...
+    '2017-07-28_1359_JL008';...
+    '2017-08-12_1056_JL008';...
+    '2017-08-14_1414_JL008'};
+
+folder = 'G:\DATA\';
+ExpRef = allExpRefs{5};
+load(fullfile(folder, [ExpRef, '_TM.mat']))
 
 %% plotting
 warning('off', 'MATLAB:nargchk:deprecated');
@@ -58,16 +99,16 @@ for iCell = 1:nCellsPerFigure
 end
 
 %% resildual analysis
-if ~exist('TM', 'var')
-    if strfind(hostname, 'zenbook')
-    [filename, folder] = uigetfile('C:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
-    elseif strfind(hostname, 'zero')
-    [filename, folder] = uigetfile('G:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
-    end
-    load(fullfile(folder, filename));
-end
+% if ~exist('TM', 'var')
+%     if strfind(hostname, 'zenbook')
+%     [filename, folder] = uigetfile('C:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
+%     elseif strfind(hostname, 'zero')
+%     [filename, folder] = uigetfile('G:\Processing\JL008\2017-07-15\1708\*_TM.mat', 'Select TM file', '');
+%     end
+%     load(fullfile(folder, filename));
+% end
 
-TM.getResiduals;
+% TM.getResiduals;
 
 %% plotting maps with the corresponding residuals
 
