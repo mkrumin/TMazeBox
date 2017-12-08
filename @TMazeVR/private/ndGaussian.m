@@ -21,6 +21,7 @@ switch nDims
             fspecial('gaussian', [1 sz(2)], x(2));
     otherwise
         fprintf('ndGaussian not implementd for %d dimensions yet\n', nDims);
+        h = 1;
 end
 
 % normalizing the filter, so that filtering does not affect the mean signal

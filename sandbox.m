@@ -16,6 +16,37 @@ TM = TMazeVR(info.expRef);
 
 %% training
 % for older datasets
+% addpath('\\zserver\Code\Rigging\main', '-begin');
+
+warning off
+folder = 'G:\DATA\';
+
+files = dir('G:\DATA\TM_*');
+nFiles = length(files);
+for iFile = 1:nFiles
+    fprintf('iFile %2.0f/%2.0f\n', iFile, nFiles);
+    load(fullfile(folder, files(iFile).name));
+    TM = TM.TMVR;
+    ExpRef = TM.expRef;
+    options.econ = true;
+    for iPlane = TM.Planes
+        for iROI = 1:TM.nROIs(iPlane)
+%             fprintf('%s Plane #%d/%d, cell #%d/%d\n', ExpRef, iPlane, length(TM.Planes), iROI, TM.nROIs(iPlane))
+            TM.trainMap_CV(iPlane, iROI, options);
+        end
+    end
+    fprintf('Calculating residuals..');
+    TM.getResiduals;
+    fprintf('.done\n');
+    save(fullfile(folder, [ExpRef, '_TM.mat']), 'TM');
+end
+warning on
+% rmpath('\\zserver\Code\Rigging\main');
+
+
+
+%% training
+% for older datasets
 addpath('\\zserver\Code\Rigging\main', '-begin');
 
 folder = 'G:\DATA\';
@@ -65,6 +96,7 @@ allExpRefs = {'2017-07-15_1708_JL008';...
 folder = 'G:\DATA\';
 ExpRef = allExpRefs{5};
 load(fullfile(folder, [ExpRef, '_TM.mat']))
+TM.rocAnalysis;
 
 %% plotting
 warning('off', 'MATLAB:nargchk:deprecated');

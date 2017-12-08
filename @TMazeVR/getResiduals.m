@@ -19,7 +19,11 @@ for iPlane = obj.Planes
 %                 thAxis(1) = thAxis(1)-0.001;
 %                 thAxis(end) = thAxis(end)+0.001;
                 theMap = obj.trainingData{iPlane}(iCell).zThetaMap;
-                fModel = interp2(thAxis, zAxis, theMap, thVector, zVector, 'spline');%, 0);
+                try
+                    fModel = interp2(thAxis, zAxis, theMap, thVector, zVector, 'spline');%, 0);
+                catch
+                    fModel = nan(size(fVector(:, iCell)));
+                end
                 residuals(:, iCell) = fVector(:, iCell) - fModel;
             end
         end

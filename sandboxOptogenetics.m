@@ -3,9 +3,10 @@
 clear;
 animalName = 'MK027';
 startDate = '2017-11-08';
-endDate = '2018-11-29';
+endDate = '2020-12-01';
 excludeDate = {'2000-01-01'};
 fitPsycho = true;
+fitSmartPC = true;
 alpha = 0.1;
 excludeC = NaN;
 groups2plot = 1:4;
@@ -154,6 +155,25 @@ if fitPsycho
     
     fprintf('.done (%4.2f sec)\n', toc);
     rmpath('\\zserver\Code\Psychofit\');
+end
+
+%% Fitting psychometric curves with corrected biases
+if fitSmartPC
+    nTrials = cellfun(@length, {res.contrast}', 'UniformOutput', 0);
+    iSession = num2cell([1:length(nTrials)]');
+    iSession = cellfun(@(x, y) ones(x, 1)*y, nTrials, iSession, 'UniformOutput', 0);
+    iSession = cell2mat(iSession);
+    
+    allData = struct;
+    allData.contrast = contrast;
+    allData.outcome = outcome;
+    allData.behavior = behavior;
+    allData.finished = finished;
+    allData.random = random;
+    allData.optiStim = optiStim;
+    allData.iSession = iSession;
+    
+    dataPC = fitDebiasedPC(allData);
 end
 
 
