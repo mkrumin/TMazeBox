@@ -193,7 +193,7 @@ zz = (zEdges(1:end-1) + zEdges(2:end))/2;
 rocEdges = -0.025:0.05:1.025;
 for iGroup =1:nGroups
     for iBin = 1:nZ
-        subplot(nZ, nGroups, (iBin-1)*nGroups + iGroup);
+%         subplot(nZ, nGroups, (iBin-1)*nGroups + iGroup);
         histogram(rocRL(nZ-iBin+1, :, iGroup), rocEdges, 'DisplayStyle', 'stairs', ...
             'EdgeColor', [0 0.7 0], 'FaceColor', 'none', 'LineStyle', '-','LineWidth', 1);
         hold on;

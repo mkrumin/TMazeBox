@@ -6,11 +6,12 @@ startDate = '2017-11-08';
 endDate = '2020-12-01';
 excludeDate = {'2000-01-01'};
 fitPsycho = true;
-fitSmartPC = true;
+fitSmartPC = false;
 alpha = 0.1;
 excludeC = NaN;
 groups2plot = 1:4;
-% groups2plot = 2:3;
+groups2plot = 2:3;
+% groups2plot = [1, 4];
 
 fprintf('Getting the list of experiments..');
 tic
