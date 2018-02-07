@@ -1,4 +1,4 @@
-function out = rocAnalysis(obj)
+function [out, out2] = rocAnalysis(obj)
 
 %% Getting the trial indices
 
@@ -226,6 +226,7 @@ for iGroup =1:nGroups
 end
 
 out = [sum(hRL, 2)/size(hRL, 2), sum(hRLres, 2)/size(hRLres, 2)];
+out2 = [rocRL', rocRLres'];
 %%
 return;
 %% summary rasters

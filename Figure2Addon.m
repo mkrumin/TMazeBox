@@ -19,7 +19,6 @@ tData = TM.times2p{iPlane}';
 contrasts = TM.dataTMaze.contrastSequence;
 report = TM.dataTMaze.report';
 cc = unique(contrasts);
-
 nRows = 2;
 nColumns = length(cc);
 
@@ -44,10 +43,24 @@ for iTrial = 1:nTrials
     iRow = 1*(report(iTrial) == 'L') + 2*(report(iTrial) == 'R');
     iColumn = find(cc == contrasts(iTrial));
     iPlot = sub2ind([nColumns, nRows], iColumn, iRow);
+%     if iPlot ~= 1
+%         continue;
+%     end
     subplot(nRows, nColumns, iPlot)
-    s = surface([theta, theta]', [z, z]', 0*[z, z]', [f, f]');
-    s.EdgeColor = 'interp';
-    s.LineWidth = 1;
+    theta = theta(1:10:end);
+    z = z(1:10:end);
+    f = f(1:10:end);
+%     s = surface([theta, theta]', [z, z]', 0*[z, z]', [f, f]');
+%     s.EdgeColor = 'interp';
+%     s.LineWidth = 1;
+
+    theta(end+1) = NaN;
+    z(end+1) = NaN;
+    f(end+1) = NaN;
+    p = patch(theta, z, f);
+    p.EdgeColor = 'interp';
+    p.LineWidth = 1;
+
     hold on;
     if iRow == 1
         title(sprintf('%1.0f%%', contrasts(iTrial)));
@@ -88,7 +101,7 @@ for iAx = 1:length(ax)
     ax(iAx).XTick = [-30 0 30];
     ax(iAx).YTick = [0 50 100];
     ax(iAx).FontSize = 14;
-    plot(ax(iAx), cX, cY, 'k--', 'LineWidth', 2);
+%     plot(ax(iAx), cX, cY, 'k--', 'LineWidth', 2);
 end
 
 figure;

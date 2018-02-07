@@ -7,10 +7,11 @@ endDate = '2020-12-01';
 excludeDate = {'2000-01-01'};
 fitPsycho = true;
 fitSmartPC = false;
-alpha = 0.1;
+alpha = 0.05;
 excludeC = NaN;
-groups2plot = 1:4;
-groups2plot = 2:3;
+% groups2plot = 1:3;
+% groups2plot = 2:3;
+groups2plot = 2:4;
 % groups2plot = [1, 4];
 
 fprintf('Getting the list of experiments..');
@@ -113,12 +114,12 @@ idxBoth = idx & optiStim(:, 1) & optiStim(:,2);
 
 idx = {idxNone; idxLeft; idxRight; idxBoth};
 if fitPsycho
-    LineStyle = {'.k'; '.r'; '.b'; '.m'};
+    LineStyle = {'.k'; '.r'; '.b'; '.c'};
 else
-    LineStyle = {'.-k'; '.-r'; '.-b'; '.-m'};
+    LineStyle = {'.-k'; '.-r'; '.-b'; '.-c'};
 end
-pcLineStyle = {'k'; 'r'; 'b'; 'm'};
-pcLineWidth = 3;
+pcLineStyle = {'k'; 'r'; 'b'; 'c'};
+pcLineWidth = 2;
 groupName = {'none'; 'left'; 'right'; 'both'};
 
 for iGroup = groups2plot
@@ -183,6 +184,7 @@ end
 fprintf('Plotting..')
 tic
 hFig = figure;
+hFig.Color = [1 1 1];
 
 if fitPsycho
     for iGroup = groups2plot
@@ -212,37 +214,37 @@ ax.XTick = unique([cc{:}]);
 ax.YTick = [0 0.5 1];
 ax.XLabel.String = 'Contrast [%]';
 ax.YLabel.String = 'Prob (Going Right)';
-ax.Title.String = sprintf('%s, starting from %s', animalName, startDate);
+% ax.Title.String = sprintf('%s, starting from %s', animalName, startDate);
 axis square;
 legend(allLegends);
 
 % write the number of trials near each data point
 
-for iCurve = groups2plot
-    for iPoint = 1:length(nn{iCurve})
-        tx = text(cc{iCurve}(iPoint)+1, pp{iCurve}(iPoint), sprintf('%1.0f', nn{iCurve}(iPoint)));
-        tx.Color = er(iCurve).Color;
-        tx.HorizontalAlignment = 'Left';
-        tx.VerticalAlignment = 'Middle';
-        tx.FontSize = 10;
-        tx.FontWeight = 'bold';
-    end
-end
-
-ccAll = unique([cc{:}]);
-nnAll = zeros(size(ccAll));
-for iC = 1:length(ccAll)
-    for iGroup = groups2plot
-        nnAll(iC) = nnAll(iC) + sum(nn{iGroup}(cc{iGroup} == ccAll(iC)));
-    end
-    tx = text(ccAll(iC), 0, sprintf('%1.0f', nnAll(iC)));
-    tx.Color = [0 0 0];
-    tx.HorizontalAlignment = 'Center';
-    tx.VerticalAlignment = 'Bottom';
-    tx.FontSize = 12;
-    tx.FontWeight = 'bold';
-    
-end
+% for iCurve = groups2plot
+%     for iPoint = 1:length(nn{iCurve})
+%         tx = text(cc{iCurve}(iPoint)+1, pp{iCurve}(iPoint), sprintf('%1.0f', nn{iCurve}(iPoint)));
+%         tx.Color = er(iCurve).Color;
+%         tx.HorizontalAlignment = 'Left';
+%         tx.VerticalAlignment = 'Middle';
+%         tx.FontSize = 10;
+%         tx.FontWeight = 'bold';
+%     end
+% end
+% 
+% ccAll = unique([cc{:}]);
+% nnAll = zeros(size(ccAll));
+% for iC = 1:length(ccAll)
+%     for iGroup = groups2plot
+%         nnAll(iC) = nnAll(iC) + sum(nn{iGroup}(cc{iGroup} == ccAll(iC)));
+%     end
+%     tx = text(ccAll(iC), 0, sprintf('%1.0f', nnAll(iC)));
+%     tx.Color = [0 0 0];
+%     tx.HorizontalAlignment = 'Center';
+%     tx.VerticalAlignment = 'Bottom';
+%     tx.FontSize = 12;
+%     tx.FontWeight = 'bold';
+%     
+% end
 
 drawnow;
 
