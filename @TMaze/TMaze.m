@@ -7,6 +7,7 @@ classdef TMaze
         outcome = '';   % e.g. 'WWCCFCCCCWCCCWWCCCTCCCCU'
         report = '';    %  e.g. 'RRLLLRLRLLLRLTTRLLRLRLTFU'
         contrastSequence; % signed contrast (with negative being left-side stimuli)
+        isRandom = []; % true for random trial, false for e.g. baited
         pcData = struct('cc', [], 'nn', [], 'pp', [], 'sem', []); % summary of behavioral data for fitting PC
         pcFit = struct('modelType', '', 'modelStr', '', 'pars', [], 'Likelihood', [], 'nFits', [], 'parsStart', [], 'parsMin', [], 'parsMax', []);
         posUniform; % posdata on a uniform grid (vectors of the same length, time-rescaled according to trial beginning/end)
@@ -52,6 +53,12 @@ classdef TMaze
             obj.report(obj.outcome == 'W') = 'R'+'L' - obj.stimSide(obj.outcome == 'W');
             obj.contrastSequence = obj.SESSION.contrastSequence(1:nTrials);
             obj.contrastSequence(obj.stimSide=='L') = -obj.contrastSequence(obj.stimSide=='L');
+            if isequal(obj.EXP.stimType, 'BAITED')
+                tmp = ['C', obj.outcome(1:end-1)];
+                obj.isRandom = [tmp == 'C']';
+            else
+                obj.isRandom = true(nTrials, 1);
+            end
         end % TMaze constructor
         
     end % methods

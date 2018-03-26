@@ -19,12 +19,17 @@ for iPlane = obj.Planes
 %                 thAxis(1) = thAxis(1)-0.001;
 %                 thAxis(end) = thAxis(end)+0.001;
                 theMap = obj.trainingData{iPlane}(iCell).zThetaMap;
-                try
-                    fModel = interp2(thAxis, zAxis, theMap, thVector, zVector, 'spline');%, 0);
-                catch
-                    fModel = nan(size(fVector(:, iCell)));
+                if ~all(isnan(theMap))
+                    try
+                        fModel = interp2(thAxis, zAxis, theMap, thVector, zVector, 'spline');%, 0);
+                    catch
+                        fModel = nan(size(fVector(:, iCell)));
+                    end
+                    residuals(:, iCell) = fVector(:, iCell) - fModel;
+                else
+                    % this is a cell which probably has NaN traces
+                    residuals(:, iCell) = nan(size(fVector(:, iCell)));
                 end
-                residuals(:, iCell) = fVector(:, iCell) - fModel;
             end
         end
         obj.residualData{iPlane}(iTrial).residuals = residuals;

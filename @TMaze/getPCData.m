@@ -11,6 +11,8 @@ for iContrast = 1:nContrasts
     idx = obj.contrastSequence == cc(iContrast);
     % excluding time-outs and fails from the calculation
     idx = idx & (obj.report =='R' | obj.report == 'L')'; 
+    % including only random trials
+    idx = idx & obj.isRandom;
     nn(iContrast) = sum(idx);
 %     pp(iContrast) = sum(obj.report(idx) == 'R')/nn(iContrast);
     [pp(iContrast), confInt(:, iContrast)] = binofit(sum(obj.report(idx) == 'R'), nn(iContrast), 0.05);

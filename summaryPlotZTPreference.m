@@ -1,7 +1,7 @@
 warning off
 folder = 'G:\DATA\';
 
-files = dir('G:\DATA\*_TM.mat');
+files = dir('G:\DATA\*1057*_TM.mat');
 nFiles = length(files);
 nRows = floor(sqrt(nFiles));
 nColumns = ceil(nFiles/nRows);
@@ -34,9 +34,11 @@ warning on
 figure
 aurocMat = cell2mat(auroc(:));
 plot(aurocMat(:,1), aurocMat(:,2), '.');
+hold on;
+plot([0, 1], [0, 1], 'k:');
+axis equal 
 xlim([0 1]);
 ylim([0 1]);
-axis equal 
 set(gca, 'XTick', [0 0.5 1], 'YTick', [0 0.5 1]);
 xlabel('Full Data AUROC');
 ylabel('Residuals AUROC');

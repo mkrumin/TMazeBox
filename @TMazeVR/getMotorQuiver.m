@@ -54,3 +54,9 @@ ylabel('z [cm]');
 axis xy;
 colorbar;
 
+figure
+quiver(thAxis, zAxis, rMap, vMap)
+axis equal tight
+xlabel('\theta [deg]');
+ylabel('z [cm]');
+

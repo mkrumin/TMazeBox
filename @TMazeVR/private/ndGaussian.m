@@ -20,7 +20,7 @@ switch nDims
         h = fspecial('gaussian', [sz(1) 1], x(1)) * ...
             fspecial('gaussian', [1 sz(2)], x(2));
     otherwise
-        fprintf('ndGaussian not implementd for %d dimensions yet\n', nDims);
+        fprintf('ndGaussian not implemented for %d dimensions yet\n', nDims);
         h = 1;
 end
 

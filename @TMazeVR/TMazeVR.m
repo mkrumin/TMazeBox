@@ -104,7 +104,7 @@ classdef TMazeVR < handle
             
             fprintf('Getting VR stimulus movie times...\n');
             try
-                obj.timesVRframes = getTmazeFrameTimes(obj.info);
+                obj.timesVRframes = getTmazeFrameTimes(obj);
             catch e
                 fprintf('Something went wrong...\n');
                 fprintf('%s\n', e.message);
