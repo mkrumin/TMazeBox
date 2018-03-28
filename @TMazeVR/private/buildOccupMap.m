@@ -9,6 +9,7 @@ switch nDims
         binCentres{2} = binCentres{2}(1:end-1);
     case 1
         [occMap, ~] = histcounts(coords, binEdges{1});
+        occMap = occMap(:);
         binCentres{1} = (binEdges{1}(1:end-1) + binEdges{1}(2:end))/2;
     otherwise
         error('buildOccupMap() only supports 1-D and 2-D maps');

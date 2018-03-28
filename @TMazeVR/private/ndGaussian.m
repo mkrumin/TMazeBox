@@ -16,6 +16,7 @@ switch nDims
         % normalization is not perfect due to finite length, so let's save a few flops
         % as there is normalization at the end of the function
         h = exp(-(t.^2)/(2*x(1)^2));
+        h = h(:);
     case 2
         h = fspecial('gaussian', [sz(1) 1], x(1)) * ...
             fspecial('gaussian', [1 sz(2)], x(2));

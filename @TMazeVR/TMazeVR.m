@@ -20,6 +20,7 @@ classdef TMazeVR < handle
         timesEye
         trainingData
         residualData
+        modelFits
         ellData
     end
     

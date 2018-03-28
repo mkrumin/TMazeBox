@@ -205,5 +205,33 @@ for iCell = 1:3*nCellsPerFigure
     end
 
 end
+%%
+%% training multiple models
+% for older datasets
+% addpath('\\zserver\Code\Rigging\main', '-begin');
 
+warning off
+folder = 'G:\DATA\';
 
+% ExpRef = '2014-08-15_1931_MK012';
+% files = dir(sprintf('G:\\DATA\\%s_TM.mat', ExpRef));
+files = dir('G:\DATA\*_TM.mat');
+nFiles = length(files);
+for iFile = 1:nFiles
+    fprintf('iFile %2.0f/%2.0f\n', iFile, nFiles);
+    load(fullfile(folder, files(iFile).name));
+    ExpRef = TM.expRef;
+    options.econ = true;
+    for iPlane = TM.Planes
+        for iROI = 1:TM.nROIs(iPlane)
+            fprintf('%s Plane #%d/%d, cell #%d/%d\n', ExpRef, iPlane, length(TM.Planes), iROI, TM.nROIs(iPlane))
+            TM.trainSFZDModels(iPlane, iROI, options);
+        end
+    end
+%     fprintf('Calculating residuals..');
+%     TM.getResiduals;
+%     fprintf('.done\n');
+    save(fullfile(folder, [ExpRef, '_TMwFits.mat']), 'TM');
+end
+warning on
+% rmpath('\\zserver\Code\Rigging\main');

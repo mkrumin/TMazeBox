@@ -125,7 +125,7 @@ EV = 1-[o.trainingData{iPlane}.errVals]';
 
 for iCell = 1:10
     iROI = idx(iCell);
-    figure
+    hFig = figure('Position', [274 509  1226  524]);
     subplot(1, 3, 1);
     zAxis = o.trainingData{iPlane}(iROI).zThetaBinCentres{1};
     thAxis = o.trainingData{iPlane}(iROI).zThetaBinCentres{2};
@@ -152,6 +152,9 @@ for iCell = 1:10
         max( o.trainingData{iPlane}(iROI).zThetaMap(:))])
     axis xy equal tight
     title('z-\theta map of residuals');
+    
+%     filename = sprintf('Cell#%1.0f_%02.0f.png', iPlane, iCell);
+%     print(hFig, fullfile('G:\Temp2p\', filename), '-dpng') 
 
 end
 %%
