@@ -1,4 +1,4 @@
-function trainSFZDModels(obj, iPlane, iROI, options)
+function characterizeSFZDModels(obj, options)
 
 if nargin<4
     options = struct;
@@ -6,221 +6,268 @@ end
 options = fillOptions(obj, options);
 % options.doPlotting = false; % flag for debugging
 
-fData = obj.data2p{iPlane}.F(:, iROI);
-
-F0 = prctile(fData, 20);
-fData = (fData-F0)/F0;
-
-tData = obj.times2p{iPlane};
-tData = tData - options.delay;
-
 trialIdx = 1:length(obj.dataTMaze.contrastSequence);
 nTrials = length(trialIdx);
-thAll = cell(nTrials, 1);
-zAll = cell(nTrials, 1);
-fAll = cell(nTrials, 1);
-validTrials = true(nTrials, 1);
-for iTrial = 1:nTrials
-    [thAll{iTrial}, zAll{iTrial}, fAll{iTrial}] = buildVectors(obj, iTrial, tData, fData, options);
-    validTrials(iTrial) = ~isempty(fAll{iTrial});
+report = obj.dataTMaze.report;
+
+rho = struct('ZTh', [], 'ZThD', [], 'ZD', [], 'ZThCV', [], 'ZThDCV', [], 'ZDCV', []);
+ev = struct('ZTh', [], 'ZThD', [], 'ZD', [], 'ZThCV', [], 'ZThDCV', [], 'ZDCV', []);
+
+for iPlane = obj.Planes
+    
+    fprintf('iPlane = %1.0f/%1.0f\n', iPlane, max(obj.Planes));
+    fData = obj.data2p{iPlane}.F;
+    
+    F0 = prctile(fData, 20);
+    fData = bsxfun(@rdivide, bsxfun(@minus, fData, F0), F0);
+    nROIs = size(fData, 2);
+    
+    tData = obj.times2p{iPlane};
+    tData = tData - options.delay;
+    
+    thAll = cell(nTrials, 1);
+    zAll = cell(nTrials, 1);
+    fAll = cell(nTrials, 1);
+    validTrials = true(nTrials, 1);
+    for iTrial = 1:nTrials
+        [thAll{iTrial}, zAll{iTrial}, fAll{iTrial}] = buildVectors(obj, iTrial, tData, fData, options);
+        validTrials(iTrial) = ~isempty(fAll{iTrial});
+    end
+    
+    %     zMin = min(abs(cell2mat(zAll)));
+    %     zMax = max(abs(cell2mat(zAll)));
+    %     thMax = max(abs(cell2mat(thAll)));
+    % clear zAll thAll;
+    
+    % now, a complicated way to define bin edges
+    %     thEdges = buildEdges(thMax, options.dTheta);
+    %     zEdges = buildEdges([zMin, zMax], options.dZ);
+    
+    
+    %% get models' residuals, explained variance, and rho (trial-by-trial)
+    
+    extras = struct('theta', [], 'z', [], 'fData', [], 'fZTh', [], 'fZThD', [], 'fZD', [],...
+        'fZThCV', [], 'fZThDCV', [], 'fZDCV', []);
+    extras = repmat(extras, nTrials, 1);
+    
+    %% estimate the overfit models here
+    
+    for iTrial = 1:nTrials
+        extras(iTrial).theta = thAll{iTrial};
+        extras(iTrial).z = zAll{iTrial};
+        extras(iTrial).fData = fAll{iTrial};
+        extras(iTrial).fZTh = nan(size(extras(iTrial).fData));
+        extras(iTrial).fZThD = nan(size(extras(iTrial).fData));
+        extras(iTrial).fZD = nan(size(extras(iTrial).fData));
+        extras(iTrial).fZThCV = nan(size(extras(iTrial).fData));
+        extras(iTrial).fZThDCV = nan(size(extras(iTrial).fData));
+        extras(iTrial).fZDCV = nan(size(extras(iTrial).fData));
+        if isempty(thAll{iTrial})
+            continue;
+        end
+        for iROI = 1:nROIs
+            %             fprintf('iPlane = %1.0f, iTrial = %1.0f/%1.0f, iROI = %1.0f/%1.0f\n', iPlane, iTrial, nTrials, iROI, nROIs);
+            if all(isnan(fAll{iTrial}(:, iROI)))
+                % there is no data for this cell
+                continue;
+            end
+            ZThMap = obj.modelFits{iPlane}(iROI).ZTh.zThetaMap;
+            ZThCoords = obj.modelFits{iPlane}(iROI).ZTh.zThetaBinCentres;
+            ZThDCoords = obj.modelFits{iPlane}(iROI).ZThD.zThetaBinCentres;
+            ZDCoords = obj.modelFits{iPlane}(iROI).ZD.zThetaBinCentres;
+            if report(iTrial) == 'R'
+                ZThDMap = obj.modelFits{iPlane}(iROI).ZThD.zThetaMapR;
+                ZDMap = obj.modelFits{iPlane}(iROI).ZD.zThetaMapR;
+            elseif report(iTrial) == 'L'
+                ZThDMap = obj.modelFits{iPlane}(iROI).ZThD.zThetaMapL;
+                ZDMap = obj.modelFits{iPlane}(iROI).ZD.zThetaMapL;
+            else
+                continue; % traces will remain NaNs
+                %                 ZThDMap = nan(size(obj.modelFits{iPlane}(iROI).ZThD.zThetaMapL));
+                %                 ZDMap = nan(size(obj.modelFits{iPlane}(iROI).ZD.zThetaMapL));
+            end
+            % estimate traces predicted from overfit models here
+            extras(iTrial).fZTh(:, iROI) = interp2(ZThCoords{2}, ZThCoords{1}, ZThMap, ...
+                extras(iTrial).theta, extras(iTrial).z, 'spline');
+            extras(iTrial).fZThD(:, iROI) = interp2(ZThDCoords{2}, ZThDCoords{1}, ZThDMap, ...
+                extras(iTrial).theta, extras(iTrial).z, 'spline');
+            extras(iTrial).fZD(:, iROI) = interp1(ZDCoords{1}, ZDMap, extras(iTrial).z, 'spline');
+            
+        end
+    end
+    
+    %% characterize the cross-validated (k-fold) models here
+    
+    nChunks = options.cvFactor;
+    validTrials = validTrials & ismember(obj.dataTMaze.report, 'LR')';
+    validTrialIdx = find(validTrials);
+    reportValid = obj.dataTMaze.report(validTrials);
+    reportValid = reportValid(:);
+    
+    cvObject = cvpartition(reportValid, 'kFold', nChunks);
+    fValid = fAll(validTrials);
+    zValid = zAll(validTrials);
+    thValid = thAll(validTrials);
+    
+    thVector = cell(nChunks, 1);
+    zVector = cell(nChunks, 1);
+    fVector = cell(nChunks, 1);
+    zR = cell(nChunks, 1);
+    thR = cell(nChunks, 1);
+    fR = cell(nChunks, 1);
+    zL = cell(nChunks, 1);
+    thL = cell(nChunks, 1);
+    fL = cell(nChunks, 1);
+    coords = cell(nChunks, 1);
+    coordsR = cell(nChunks, 1);
+    coordsL = cell(nChunks, 1);
+    for iChunk = 1:nChunks
+        idxL = cvObject.test(iChunk) & reportValid == 'L';
+        idxR = cvObject.test(iChunk) & reportValid == 'R';
+        thVector{iChunk} = cell2mat(thValid([idxL | idxR]));
+        zVector{iChunk} = cell2mat(zValid([idxL | idxR]));
+        fVector{iChunk} = cell2mat(fValid([idxL | idxR]));
+        zR{iChunk} = cell2mat(zValid(idxR));
+        thR{iChunk} = cell2mat(thValid(idxR));
+        fR{iChunk} = cell2mat(fValid(idxR));
+        zL{iChunk} = cell2mat(zValid(idxL));
+        thL{iChunk} = cell2mat(thValid(idxL));
+        fL{iChunk} = cell2mat(fValid(idxL));
+        coords{iChunk} = [zVector{iChunk}, thVector{iChunk}];
+        coordsR{iChunk} = [zR{iChunk}, thR{iChunk}];
+        coordsL{iChunk} = [zL{iChunk}, thL{iChunk}];
+    end
+    
+    for iChunk = 1:nChunks
+        
+        chunks = setdiff(1:nChunks, iChunk);
+        fMatrix = cell2mat(fVector(chunks));
+        fMatrixR = cell2mat(fR(chunks));
+        fMatrixL = cell2mat(fL(chunks));
+        coordsMatrix = cell2mat(coords(chunks));
+        coordsMatrixR = cell2mat(coordsR(chunks));
+        coordsMatrixL = cell2mat(coordsL(chunks));
+        
+        trials = find(cvObject.test(iChunk));
+        for iTr = 1:length(trials)
+            iValidTrial = trials(iTr);
+            for iROI = 1:nROIs
+                
+                if all(isnan(fMatrix(:, iROI)))
+                    % there is no data for this cell
+                    continue;
+                end
+
+                %                 fprintf('CV iPlane = %1.0f, iChunk = %1.0f/%1.0f, iTrial = %1.0f/%1.0f, iROI = %1.0f/%1.0f\n', ...
+                %                     iPlane, iChunk, nChunks, iTr, length(trials), iROI, nROIs);
+                optStd = obj.modelFits{iPlane}(iROI).ZTh.optStd;
+                hFilter = ndGaussian(optStd);
+                zEdges = obj.modelFits{iPlane}(iROI).ZTh.zEdges;
+                thEdges = obj.modelFits{iPlane}(iROI).ZTh.thEdges;
+                [ZThMap, ZThCoords] = estMap(coordsMatrix, fMatrix(:, iROI), {zEdges, thEdges}, hFilter);
+                
+                ZThDCoords = obj.modelFits{iPlane}(iROI).ZThD.zThetaBinCentres;
+                ZDCoords = obj.modelFits{iPlane}(iROI).ZD.zThetaBinCentres;
+                if reportValid(iValidTrial) == 'R'
+                    optStd = obj.modelFits{iPlane}(iROI).ZThD.optStdR;
+                    hFilter = ndGaussian(optStd);
+                    zEdges = obj.modelFits{iPlane}(iROI).ZThD.zEdges;
+                    thEdges = obj.modelFits{iPlane}(iROI).ZThD.thEdges;
+                    [ZThDMap, ZThDCoords] = estMap(coordsMatrixR, fMatrixR(:, iROI), {zEdges, thEdges}, hFilter);
+                    
+                    optStd = obj.modelFits{iPlane}(iROI).ZD.optStdR;
+                    hFilter = ndGaussian(optStd);
+                    zEdges = obj.modelFits{iPlane}(iROI).ZD.zEdges;
+                    [ZDMap, ZDCoords] = estMap(coordsMatrixR(:, 1), fMatrixR(:, iROI), {zEdges}, hFilter);
+                elseif reportValid(iValidTrial) == 'L'
+                    optStd = obj.modelFits{iPlane}(iROI).ZThD.optStdL;
+                    hFilter = ndGaussian(optStd);
+                    zEdges = obj.modelFits{iPlane}(iROI).ZThD.zEdges;
+                    thEdges = obj.modelFits{iPlane}(iROI).ZThD.thEdges;
+                    [ZThDMap, ZThDCoords] = estMap(coordsMatrixL, fMatrixL(:, iROI), {zEdges, thEdges}, hFilter);
+                    
+                    optStd = obj.modelFits{iPlane}(iROI).ZD.optStdL;
+                    hFilter = ndGaussian(optStd);
+                    zEdges = obj.modelFits{iPlane}(iROI).ZD.zEdges;
+                    [ZDMap, ZDCoords] = estMap(coordsMatrixL(:, 1), fMatrixL(:, iROI), {zEdges}, hFilter);
+                else
+                    ZThDMap = nan(size(obj.modelFits{iPlane}(iROI).ZThD.zThetaMapL));
+                    ZDMap = nan(size(obj.modelFits{iPlane}(iROI).ZD.zThetaMapL));
+                end
+                % estimate traces predicted from cross-validated models here
+                iTrial = validTrialIdx(iValidTrial);
+                extras(iTrial).fZThCV(:, iROI) = interp2(ZThCoords{2}, ZThCoords{1}, ZThMap, ...
+                    extras(iTrial).theta, extras(iTrial).z, 'spline');
+                extras(iTrial).fZThDCV(:, iROI) = interp2(ZThDCoords{2}, ZThDCoords{1}, ZThDMap, ...
+                    extras(iTrial).theta, extras(iTrial).z, 'spline');
+                extras(iTrial).fZDCV(:, iROI) = interp1(ZDCoords{1}, ZDMap, extras(iTrial).z, 'spline');
+            end
+        end
+    end
+    obj.modelExtras{iPlane} = extras;
+    
+    %% estimate overfit explained variance and rho
+    f = {extras.fData}';
+    zth = {extras.fZTh}';
+    zthd = {extras.fZThD}';
+    zd = {extras.fZD}';
+    
+    meanF = cell2mat(cellfun(@mean, f, 'UniformOutput', false));
+    meanZTh = cell2mat(cellfun(@mean, zth, 'UniformOutput', false));
+    meanZThD = cell2mat(cellfun(@mean, zthd, 'UniformOutput', false));
+    meanZD = cell2mat(cellfun(@mean, zd, 'UniformOutput', false));
+    
+    f = cell2mat(f);
+    zth = cell2mat(zth);
+    zthd = cell2mat(zthd);
+    zd = cell2mat(zd);
+    
+    for iROI = 1:nROIs
+        tmp = corrcoef(meanF(:,iROI), meanZTh(:,iROI), 'rows', 'complete');
+        rho(iPlane).ZTh(iROI) = tmp(2);
+        tmp = corrcoef(meanF(:,iROI), meanZThD(:,iROI), 'rows', 'complete');
+        rho(iPlane).ZThD(iROI) = tmp(2);
+        tmp = corrcoef(meanF(:,iROI), meanZD(:,iROI), 'rows', 'complete');
+        rho(iPlane).ZD(iROI) = tmp(2);
+    end
+    
+    ev(iPlane).ZTh = 1 - mean((zth - f).^2)./var(f);
+    ev(iPlane).ZThD = 1 - mean((zthd - f).^2)./var(f);
+    ev(iPlane).ZD = 1 - mean((zd - f).^2)./var(f);
+    
+    %% estimate cross-validated explained variance and rho
+    f = {extras.fData}';
+    zth = {extras.fZThCV}';
+    zthd = {extras.fZThDCV}';
+    zd = {extras.fZDCV}';
+    
+    meanF = cell2mat(cellfun(@mean, f, 'UniformOutput', false));
+    meanZTh = cell2mat(cellfun(@mean, zth, 'UniformOutput', false));
+    meanZThD = cell2mat(cellfun(@mean, zthd, 'UniformOutput', false));
+    meanZD = cell2mat(cellfun(@mean, zd, 'UniformOutput', false));
+    
+    f = cell2mat(f);
+    zth = cell2mat(zth);
+    zthd = cell2mat(zthd);
+    zd = cell2mat(zd);
+    
+    for iROI = 1:nROIs
+        tmp = corrcoef(meanF(:,iROI), meanZTh(:,iROI), 'rows', 'complete');
+        rho(iPlane).ZThCV(iROI) = tmp(2);
+        tmp = corrcoef(meanF(:,iROI), meanZThD(:,iROI), 'rows', 'complete');
+        rho(iPlane).ZThDCV(iROI) = tmp(2);
+        tmp = corrcoef(meanF(:,iROI), meanZD(:,iROI), 'rows', 'complete');
+        rho(iPlane).ZDCV(iROI) = tmp(2);
+    end
+    
+    ev(iPlane).ZThCV = 1 - mean((zth - f).^2)./var(f);
+    ev(iPlane).ZThDCV = 1 - mean((zthd - f).^2)./var(f);
+    ev(iPlane).ZDCV = 1 - mean((zd - f).^2)./var(f);
+    
+    
 end
-
-zMin = min(abs(cell2mat(zAll)));
-zMax = max(abs(cell2mat(zAll)));
-thMax = max(abs(cell2mat(thAll)));
-% clear zAll thAll;
-
-% now, a complicated way to define bin edges
-thEdges = buildEdges(thMax, options.dTheta);
-zEdges = buildEdges([zMin, zMax], options.dZ);
-
-nChunks = options.cvFactor;
-validTrials = validTrials & ismember(obj.dataTMaze.report, 'LR')';
-validTrialIdx = find(validTrials);
-report = obj.dataTMaze.report(validTrials);
-report = report(:);
-
-cvObject = cvpartition(report, 'kFold', nChunks);
-fValid = fAll(validTrials);
-zValid = zAll(validTrials);
-thValid = thAll(validTrials);
-
-thVector = cell(nChunks, 1);
-zVector = cell(nChunks, 1);
-fVector = cell(nChunks, 1);
-zR = cell(nChunks, 1);
-thR = cell(nChunks, 1);
-fR = cell(nChunks, 1);
-zL = cell(nChunks, 1);
-thL = cell(nChunks, 1);
-fL = cell(nChunks, 1);
-coords = cell(nChunks, 1);
-coordsR = cell(nChunks, 1);
-coordsL = cell(nChunks, 1);
-for iChunk = 1:nChunks
-    idxL = cvObject.test(iChunk) & report == 'L';
-    idxR = cvObject.test(iChunk) & report == 'R';
-    thVector{iChunk} = cell2mat(thValid([idxL | idxR]));
-    zVector{iChunk} = cell2mat(zValid([idxL | idxR]));
-    fVector{iChunk} = cell2mat(fValid([idxL | idxR]));
-    zR{iChunk} = cell2mat(zValid(idxR));
-    thR{iChunk} = cell2mat(thValid(idxR));
-    fR{iChunk} = cell2mat(fValid(idxR));
-    zL{iChunk} = cell2mat(zValid(idxL));
-    thL{iChunk} = cell2mat(thValid(idxL));
-    fL{iChunk} = cell2mat(fValid(idxL));
-    coords{iChunk} = [zVector{iChunk}, thVector{iChunk}];
-    coordsR{iChunk} = [zR{iChunk}, thR{iChunk}];
-    coordsL{iChunk} = [zL{iChunk}, thL{iChunk}];
-end
-
-% estimating the optimal filter STDs
-[optStd, errVals, errValMatrix, stdGridValues] = ...
-    estOptimalStd(coords, fVector, {zEdges, thEdges}, options.errPower);
-[optStdR3D, errValR3D, errValMatrixR3D, stdGridValuesR3D] = ...
-    estOptimalStd(coordsR, fR, {zEdges, thEdges}, options.errPower);
-[optStdL3D, errValL3D, errValMatrixL3D, stdGridValuesL3D] = ...
-    estOptimalStd(coordsL, fL, {zEdges, thEdges}, options.errPower);
-[optStdR, errValR, errValMatrixR, stdGridValuesR] = ...
-    estOptimalStd1D(zR, fR, {zEdges}, options.errPower);
-[optStdL, errValL, errValMatrixL, stdGridValuesL] = ...
-    estOptimalStd1D(zL, fL, {zEdges}, options.errPower);
-
-% [optStd25D, errVals25D, ~, ~] = ...
-%     estOptimalStd25D([coordsL, coordsR], [fL, fR], {zEdges, thEdges}, options.errPower);
-% [optStd15D, errVals15D, ~, ~] = ...
-%     estOptimalStd15D([zL, zR], [fL, fR], {zEdges}, options.errPower);
-
-nR = sum(report == 'R');
-nL = sum(report == 'L');
-
-% these are the results of the main z-theta model
-obj.modelFits{iPlane}(iROI).ZTh.optStd = optStd;
-obj.modelFits{iPlane}(iROI).ZTh.errVal = errVals;
-obj.modelFits{iPlane}(iROI).ZTh.errValMatrix = errValMatrix;
-obj.modelFits{iPlane}(iROI).ZTh.stdGridValues = stdGridValues;
-obj.modelFits{iPlane}(iROI).ZTh.zEdges = zEdges;
-obj.modelFits{iPlane}(iROI).ZTh.thEdges = thEdges;
-
-hFilter = ndGaussian(optStd);
-[theMap, binCentres] = estMap(cell2mat(coords), cell2mat(fVector), {zEdges, thEdges}, hFilter);
-hFilter = ndGaussian([0.2 0.2]);
-[rawMap, ~] = estMap(cell2mat(coords), cell2mat(fVector), {zEdges, thEdges}, hFilter);
-
-obj.modelFits{iPlane}(iROI).ZTh.options = options;
-obj.modelFits{iPlane}(iROI).ZTh.zThetaMap = theMap;
-obj.modelFits{iPlane}(iROI).ZTh.zThetaBinCentres = binCentres;
-obj.modelFits{iPlane}(iROI).ZTh.rawDataMap = rawMap;
-
-% these are the results of the full z-theta-d model
-% (z-theta maps for each d can be completely different)
-obj.modelFits{iPlane}(iROI).ZThD.optStdR = optStdR3D;
-obj.modelFits{iPlane}(iROI).ZThD.optStdL = optStdL3D;
-obj.modelFits{iPlane}(iROI).ZThD.errValR = errValR3D;
-obj.modelFits{iPlane}(iROI).ZThD.errValL = errValL3D;
-obj.modelFits{iPlane}(iROI).ZThD.errVal = (errValL3D*nL + errValR3D*nR)/(nL + nR);
-obj.modelFits{iPlane}(iROI).ZThD.errValMatrixR = errValMatrixR3D;
-obj.modelFits{iPlane}(iROI).ZThD.errValMatrixL = errValMatrixL3D;
-obj.modelFits{iPlane}(iROI).ZThD.stdGridValuesR = stdGridValuesR3D;
-obj.modelFits{iPlane}(iROI).ZThD.stdGridValuesL = stdGridValuesL3D;
-obj.modelFits{iPlane}(iROI).ZThD.zEdges = zEdges;
-obj.modelFits{iPlane}(iROI).ZThD.thEdges = thEdges;
-obj.modelFits{iPlane}(iROI).ZThD.options = options;
-
-hFilter = ndGaussian(optStdR3D);
-[theMapR, binCentres] = estMap(cell2mat(coordsR), cell2mat(fR), {zEdges, thEdges}, hFilter);
-hFilter = ndGaussian(optStdL3D);
-[theMapL, ~] = estMap(cell2mat(coordsL), cell2mat(fL), {zEdges, thEdges}, hFilter);
-hFilter = ndGaussian([0.2 0.2]);
-[rawMapR, ~] = estMap(cell2mat(coordsR), cell2mat(fR), {zEdges, thEdges}, hFilter);
-[rawMapL, ~] = estMap(cell2mat(coordsL), cell2mat(fL), {zEdges, thEdges}, hFilter);
-
-obj.modelFits{iPlane}(iROI).ZThD.zThetaMapR = theMapR;
-obj.modelFits{iPlane}(iROI).ZThD.zThetaMapL = theMapL;
-obj.modelFits{iPlane}(iROI).ZThD.zThetaBinCentres = binCentres;
-obj.modelFits{iPlane}(iROI).ZThD.rawDataMapR = rawMapR;
-obj.modelFits{iPlane}(iROI).ZThD.rawDataMapL = rawMapL;
-
-%%
-
-if options.doPlotting
-    figure('Name', sprintf('%s, iPlane = %1.0f, iROI = %1.0f', obj.expRef, iPlane, iROI))
-    clim = [min([theMapR(:); theMapL(:); theMap(:)]), max([theMapR(:); theMapL(:); theMap(:)])];
-    clim = [min([rawMapR(:); rawMapL(:); rawMap(:)]), max([rawMapR(:); rawMapL(:); rawMap(:)])];
-    subplot(2, 3, 1);
-    imagesc(binCentres{2}, binCentres{1}, rawMapL);
-    axis xy equal tight;
-    caxis(clim);
-    ylabel('No Smoothing');
-    title('L trials');
-    subplot(2, 3, 2);
-    imagesc(binCentres{2}, binCentres{1}, rawMap);
-    axis xy equal tight;
-    caxis(clim);
-    title('All trials');
-    subplot(2, 3, 3);
-    imagesc(binCentres{2}, binCentres{1}, rawMapR);
-    axis xy equal tight;
-    caxis(clim);
-    title('R trials');
-
-    subplot(2, 3, 4);
-    imagesc(binCentres{2}, binCentres{1}, theMapL);
-    axis xy equal tight;
-    caxis(clim);
-    ylabel('Cross-validated model');
-    subplot(2, 3, 5);
-    imagesc(binCentres{2}, binCentres{1}, theMap);
-    axis xy equal tight;
-    caxis(clim);
-    subplot(2, 3, 6);
-    imagesc(binCentres{2}, binCentres{1}, theMapR);
-    axis xy equal tight;
-    caxis(clim);
-end
-
-%%
-% these are the results of the 'full' z-d model
-% (z tuning for each d can be completely different)
-obj.modelFits{iPlane}(iROI).ZD.optStdR = optStdR;
-obj.modelFits{iPlane}(iROI).ZD.optStdL = optStdL;
-obj.modelFits{iPlane}(iROI).ZD.errValR = errValR;
-obj.modelFits{iPlane}(iROI).ZD.errValL = errValL;
-obj.modelFits{iPlane}(iROI).ZD.errVal = (errValL*nL + errValR*nR)/(nL + nR);
-obj.modelFits{iPlane}(iROI).ZD.errValMatrixR = errValMatrixR;
-obj.modelFits{iPlane}(iROI).ZD.errValMatrixL = errValMatrixL;
-obj.modelFits{iPlane}(iROI).ZD.stdGridValuesR = stdGridValuesR;
-obj.modelFits{iPlane}(iROI).ZD.stdGridValuesL = stdGridValuesL;
-obj.modelFits{iPlane}(iROI).ZD.zEdges = zEdges;
-obj.modelFits{iPlane}(iROI).ZD.options = options;
-
-
-hFilter = ndGaussian(optStdR);
-[theMapR, binCentres] = estMap(cell2mat(zR), cell2mat(fR), {zEdges}, hFilter);
-hFilter = ndGaussian(optStdL);
-[theMapL, ~] = estMap(cell2mat(zL), cell2mat(fL), {zEdges}, hFilter);
-hFilter = ndGaussian(0.2);
-[rawMapR, ~] = estMap(cell2mat(zR), cell2mat(fR), {zEdges}, hFilter);
-[rawMapL, ~] = estMap(cell2mat(zL), cell2mat(fL), {zEdges}, hFilter);
-
-obj.modelFits{iPlane}(iROI).ZD.zThetaMapR = theMapR;
-obj.modelFits{iPlane}(iROI).ZD.zThetaMapL = theMapL;
-obj.modelFits{iPlane}(iROI).ZD.zThetaBinCentres = binCentres;
-obj.modelFits{iPlane}(iROI).ZD.rawDataMapR = rawMapR;
-obj.modelFits{iPlane}(iROI).ZD.rawDataMapL = rawMapL;
-
-%%
-if options.doPlotting
-    figure('Name', sprintf('%s, iPlane = %1.0f, iROI = %1.0f', obj.expRef, iPlane, iROI))
-    zAxis = binCentres{1};
-    plot(zAxis, theMapR, zAxis, theMapL, 'LineWidth', 2)
-    hold on;
-    plot(zAxis, rawMapR, '--', zAxis, rawMapL, '--', 'LineWidth', 1)
-    xlim([min(zEdges), max(zEdges)])
-    legend('Model_R', 'Model_L', 'Raw_R', 'Raw_L');
-    xlabel('z [cm]');
-    ylabel('\DeltaF/F');
-end
+obj.modelEV = ev;
+obj.modelRho = rho;
 end % TrainMaps()
 
 %==========================================================================

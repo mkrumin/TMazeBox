@@ -21,6 +21,9 @@ classdef TMazeVR < handle
         trainingData
         residualData
         modelFits
+        modelExtras
+        modelEV
+        modelRho
         ellData
     end
     

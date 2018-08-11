@@ -47,7 +47,7 @@ warning on
 
 %% training
 % for older datasets
-addpath('\\zserver\Code\Rigging\main', '-begin');
+addpath('C:\Users\Michael\Documents\MATLAB\OldRigbox', '-begin');
 
 folder = 'G:\DATA\';
 
@@ -63,12 +63,21 @@ folder = 'G:\DATA\';
 % allExpRefs = {};
 
 % someting is wrong with these datasets, photodiode signal?
+% allExpRefs = {...
+% %     '2017-09-23_1539_JL008';...
+% %     '2017-09-24_1558_JL008';...
+% %     '2017-09-25_1445_JL008';...
+% %     '2017-09-26_1222_JL008';...
+% %     '2017-09-28_1057_JL008';...
+%     };
+
+% allExpRefs = {...
+%     '2017-06-12_1420_JL005';...
+%     };
+
 allExpRefs = {...
-%     '2017-09-23_1539_JL008';...
-%     '2017-09-24_1558_JL008';...
-%     '2017-09-25_1445_JL008';...
-%     '2017-09-26_1222_JL008';...
-    '2017-09-28_1057_JL008';...
+%     '2014-08-02_2203_MK014';...
+    '2014-08-05_1937_MK014';...
     };
 
 
@@ -89,7 +98,7 @@ for iExpRef = 1:length(allExpRefs)
     save(fullfile(folder, [ExpRef, '_TM.mat']), 'TM');
 end
 
-rmpath('\\zserver\Code\Rigging\main');
+rmpath('C:\Users\Michael\Documents\MATLAB\OldRigbox');
 
 
 %% loading some data
@@ -213,9 +222,9 @@ end
 warning off
 folder = 'G:\DATA\';
 
-% ExpRef = '2014-08-15_1931_MK012';
-% files = dir(sprintf('G:\\DATA\\%s_TM.mat', ExpRef));
-files = dir('G:\DATA\*_TM.mat');
+ExpRef = '2014-08-05_1937_MK014';
+files = dir(sprintf('G:\\DATA\\%s_TM.mat', ExpRef));
+% files = dir('G:\DATA\*_TM.mat');
 nFiles = length(files);
 for iFile = 1:nFiles
     fprintf('iFile %2.0f/%2.0f\n', iFile, nFiles);
@@ -235,3 +244,28 @@ for iFile = 1:nFiles
 end
 warning on
 % rmpath('\\zserver\Code\Rigging\main');
+
+%% characterizing multiple models
+warning off
+folder = 'G:\DATA\';
+
+ExpRef = '2014-08-05_1937_MK014';
+files = dir(sprintf('G:\\DATA\\%s_TMwFits.mat', ExpRef));
+% files = dir('G:\DATA\*_TMwFits.mat');
+nFiles = length(files);
+for iFile = 1:nFiles
+    tic
+    fprintf('iFile %2.0f/%2.0f\n', iFile, nFiles);
+    load(fullfile(folder, files(iFile).name));
+    ExpRef = TM.expRef;
+    TM.characterizeSFZDModels;
+    try
+        save(fullfile(folder, [ExpRef, '_TMwExtras.mat']), 'TM');
+    catch
+        fprintf('Saving in ''-v7'' failed, trying to save with ''-v7.3'' flag..');
+        save(fullfile(folder, [ExpRef, '_TMwExtras.mat']), 'TM', '-v7.3');
+        fprintf('.done\n')
+    end
+    toc
+end
+warning on

@@ -1,9 +1,10 @@
 % dat2info wrapper script (including saving files)
 
 % use this for older datasets
-addpath('\\zserver\Code\Rigging\main', '-begin');
+addpath('C:\Users\Michael\Documents\MATLAB\OldRigbox', '-begin');
 
-[filename, folder] = uigetfile('G:\Suite2pProcessed\F\JL008\2017-09-28', '', '', 'multiselect', 'on');
+
+[filename, folder] = uigetfile('G:\Suite2pProcessed\MK014', '', '', 'multiselect', 'on');
 if ~iscell(filename)
     filename = {filename};
 end
@@ -25,4 +26,4 @@ for iFile = 1:nFiles
     end
 end
 
-rmpath('\\zserver\Code\Rigging\main');
+rmpath('C:\Users\Michael\Documents\MATLAB\OldRigbox');
