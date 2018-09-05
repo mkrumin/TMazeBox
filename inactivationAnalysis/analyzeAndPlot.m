@@ -1,6 +1,7 @@
-function analyzeAndPlot(contrast, behavior, idx, options)
+function model = analyzeAndPlot(contrast, behavior, idx, options)
 
 nGroups = length(idx);
+model = struct('pars', [], 'LL', [], 'exitflag', [], 'output', []);
 alpha = 0.05;
 
 for iGroup = 1:nGroups
@@ -64,6 +65,10 @@ if options.fitPsycho
         [pars, LL, exitflag, output] = ...
             PAL_PFML_Fit(cc{iGroup}, nr{iGroup}, nn{iGroup}, searchGrid, paramsFree, PF, ...
             'guessLimits', [0 1], 'lapseLimits', [0 1]);
+        model(iGroup).pars = pars;
+        model(iGroup).LL = LL;
+        model(iGroup).exitflag = exitflag;
+        model(iGroup).output = output;
         yy{iGroup} = PAL_CumulativeNormal(pars, xx);
     end
     

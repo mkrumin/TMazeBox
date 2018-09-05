@@ -2,7 +2,7 @@ function makeFigure(data, options)
 
 fprintf('Plotting..')
 tic
-hFig = figure('Name', options.figName', 'Position', [650   350   600   500]);
+hFig = figure('Name', options.figName', 'Position', [450   250   600   500]);
 hFig.Color = [1 1 1];
 
 pcLineWidth = 3;
