@@ -5,30 +5,30 @@ clear;
 list = struct();
 iList = 0;
 
-% iList = iList + 1;
-% list(iList).animalName = 'MK027';
-% list(iList).startDate = '2017-11-08';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {'2000-01-01'};
-% list(iList).excludeSession = {};
-% % 
-% iList = iList + 1;
-% list(iList).animalName = 'JC001';
-% list(iList).startDate = '2018-04-01';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {'2018-06-19'};
-% list(iList).excludeSession = {}; %date_session_name(expRef)
+iList = iList + 1;
+list(iList).animalName = 'MK027';
+list(iList).startDate = '2017-11-08';
+list(iList).endDate = '2020-12-01';
+list(iList).excludeDate = {'2000-01-01'};
+list(iList).excludeSession = {};
+% 
+iList = iList + 1;
+list(iList).animalName = 'JC001';
+list(iList).startDate = '2018-04-01';
+list(iList).endDate = '2020-12-01';
+list(iList).excludeDate = {'2018-06-19'};
+list(iList).excludeSession = {}; %date_session_name(expRef)
 
 iList = iList + 1;
 list(iList).animalName = 'JC003';
-% list(iList).startDate = '2018-04-11';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {'2018-04-12', '2018-04-19'};
-% list(iList).excludeSession = {'2018-05-01_2154_JC003', '2018-05-22_1353_JC003'};
-
-list(iList).startDate = '2018-05-17'; % this is the first day V1 was inactivated
+list(iList).startDate = '2018-04-11';
 list(iList).endDate = '2020-12-01';
 list(iList).excludeDate = {'2018-04-12', '2018-04-19'};
+list(iList).excludeSession = {'2018-05-01_2154_JC003', '2018-05-22_1353_JC003'};
+
+% list(iList).startDate = '2018-05-17'; % this is the first day V1 was inactivated
+% list(iList).endDate = '2020-12-01';
+% list(iList).excludeDate = {'2018-04-12', '2018-04-19'};
 % added one session to exclude where V1 was not inactivated yet
 list(iList).excludeSession = {'2018-05-01_2154_JC003', '2018-05-22_1353_JC003', '2018-05-17_1353_JC003'};
 

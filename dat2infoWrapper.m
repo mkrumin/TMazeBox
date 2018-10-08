@@ -4,7 +4,7 @@
 addpath('C:\Users\Michael\Documents\MATLAB\OldRigbox', '-begin');
 
 
-[filename, folder] = uigetfile('G:\Suite2pProcessed\MK014', '', '', 'multiselect', 'on');
+[filename, folder] = uigetfile('G:\Suite2pProcessed\MK023', '', '', 'multiselect', 'on');
 if ~iscell(filename)
     filename = {filename};
 end

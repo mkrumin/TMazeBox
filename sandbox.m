@@ -1,6 +1,6 @@
 % let's construct the TMazeVR objects
 
-[filename, folder] = uigetfile('G:\Processing\JL008\2017-07-27\', '', '', 'multiselect', 'on');
+[filename, folder] = uigetfile('G:\Processing\MK022', '', '', 'multiselect', 'on');
 if ~iscell(filename)
     filename = {filename};
 end
@@ -75,9 +75,16 @@ folder = 'G:\DATA\';
 %     '2017-06-12_1420_JL005';...
 %     };
 
-allExpRefs = {...
+% allExpRefs = {...
 %     '2014-08-02_2203_MK014';...
-    '2014-08-05_1937_MK014';...
+%     '2014-08-05_1937_MK014';...
+%     };
+
+allExpRefs = {...
+%     '2015-07-03_1632_MK022';...
+%     '2015-08-02_2051_MK022';...
+%     '2015-06-19_2155_MK023';...
+    '2015-07-18_154_MK023';...
     };
 
 
@@ -222,7 +229,11 @@ end
 warning off
 folder = 'G:\DATA\';
 
-ExpRef = '2014-08-05_1937_MK014';
+% ExpRef = '2015-07-03_1632_MK022';
+% ExpRef = '2015-08-02_2051_MK022';
+% ExpRef = '2015-06-19_2155_MK023';
+ExpRef = '2015-07-18_154_MK023';
+
 files = dir(sprintf('G:\\DATA\\%s_TM.mat', ExpRef));
 % files = dir('G:\DATA\*_TM.mat');
 nFiles = length(files);
@@ -249,7 +260,10 @@ warning on
 warning off
 folder = 'G:\DATA\';
 
-ExpRef = '2014-08-05_1937_MK014';
+% ExpRef = '2015-07-03_1632_MK022';
+% ExpRef = '2015-08-02_2051_MK022';
+% ExpRef = '2015-06-19_2155_MK023';
+ExpRef = '2015-07-18_154_MK023';
 files = dir(sprintf('G:\\DATA\\%s_TMwFits.mat', ExpRef));
 % files = dir('G:\DATA\*_TMwFits.mat');
 nFiles = length(files);
