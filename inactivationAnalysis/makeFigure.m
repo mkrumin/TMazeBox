@@ -21,25 +21,26 @@ for iGroup = 1:nGroups
         data.ci{iGroup}(:,1)-data.pp{iGroup}, ...
         data.ci{iGroup}(:,2)-data.pp{iGroup}, ['.', options.color{iGroup}]);
     hold on;
-    er(iGroup).MarkerSize = 30;
+    er(iGroup).MarkerSize = 40;
     ax = gca;
 %     iLegend = find(groups2plot == iGroup);
     allLegends{iGroup} = sprintf('%s (%2.0f trials)', options.groupNames{iGroup}, sum(data.nn{iGroup}));
 end
 
-nContrasts = length(data.cc{1});
-for iContrast = 1:nContrasts
-    if data.fisher.p(iContrast)<0.001
-        text(data.cc{1}(iContrast), 0.8, '\Delta', 'FontSize', 18, 'HorizontalAlignment', 'Center');
-    elseif data.fisher.p(iContrast)<0.01
-        text(data.cc{1}(iContrast), 0.8, '*', 'FontSize', 18, 'HorizontalAlignment', 'Center');
-    elseif data.fisher.p(iContrast)<0.05
-        text(data.cc{1}(iContrast), 0.8, '+', 'FontSize', 18, 'HorizontalAlignment', 'Center');
-    else
-        % do nothing
-    end
-    
-end
+% nContrasts = length(data.cc{1});
+% for iContrast = 1:nContrasts
+%     if data.fisher.p(iContrast)<0.001
+%         text(data.cc{1}(iContrast), 0.8, '\Delta', 'FontSize', 18, 'HorizontalAlignment', 'Center');
+%     elseif data.fisher.p(iContrast)<0.01
+%         text(data.cc{1}(iContrast), 0.8, '*', 'FontSize', 18, 'HorizontalAlignment', 'Center');
+%     elseif data.fisher.p(iContrast)<0.05
+%         text(data.cc{1}(iContrast), 0.8, '+', 'FontSize', 18, 'HorizontalAlignment', 'Center');
+%     else
+%         % do nothing
+%     end
+%     
+% end
+
 box off
 
 xlim([-50 50]);
@@ -54,7 +55,7 @@ ax.YLabel.String = 'Prob (Going Right)';
 ax.FontSize = 16;
 ax.Title.String = options.title;
 axis square;
-legend(allLegends, 'FontSize', 16, 'Location', 'southeast', 'box', 'off');
+leg = legend(allLegends, 'FontSize', 16, 'Location', 'northwest', 'box', 'off');
 
 % write the number of trials near each data point
 

@@ -14,6 +14,7 @@ out.random = nan(nTrials, 1);
 % HACK assuming two locations
 out.optiStim = nan(nTrials, 2);
 out.isV1 = nan(nTrials, 1);
+out.isV1Session = nan(nTrials, 1);
 out.isPPC = nan(nTrials, 1);
 out.isUndecided = nan(nTrials, 1);
 out.z = cell(nTrials, 1);
@@ -47,7 +48,9 @@ for iTrial = 1:nTrials
     out.z{iTrial} = -SESSION.allTrials(iTrial).posdata(:, zInd);
     out.theta{iTrial} = SESSION.allTrials(iTrial).posdata(:, thInd)*180/pi;
 end
+out.isV1Session = repmat(any(out.isV1), nTrials, 1);
 zOptiStimStart = max(10, EXP.optiStimList(1).onset);
 [out.isUndecided, out.thPreStim] = isUndecidedPrestim(out, zOptiStimStart);
 out.behavior = out.behavior(:);
 out.outcome = out.outcome(:);
+
