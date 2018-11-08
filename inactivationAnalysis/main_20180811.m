@@ -54,13 +54,13 @@ list(iList).endDate = '2020-12-01';
 list(iList).excludeDate = {};
 list(iList).excludeSession = {}; %date_session_name(expRef)
 
-% this is a control (ChR-negative) animal
-iList = iList + 1;
-list(iList).animalName = 'MK031';
-list(iList).startDate = '2018-08-01';
-list(iList).endDate = '2020-12-01';
-list(iList).excludeDate = {};
-list(iList).excludeSession = {}; %date_session_name(expRef)
+%%  this is a control (ChR-negative) animal
+% iList = iList + 1;
+% list(iList).animalName = 'MK031';
+% list(iList).startDate = '2018-08-01';
+% list(iList).endDate = '2020-12-01';
+% list(iList).excludeDate = {};
+% list(iList).excludeSession = {}; %date_session_name(expRef)
 
 %%
 fprintf('Getting the list of experiments..');
@@ -120,8 +120,8 @@ options.figName = reshape([list.animalName], 5, []);
 options.figName = reshape([options.figName; repmat(' ', 1, length(list))], 1, []);
 
 options.fitPsycho = true;
-nSims = 10;
-nBootSims = 10;
+nSims = 100;
+nBootSims = 1000;
 
 %% Plotting distribution of thetas at laser stim onset
 % all the session and trials are taken into account
@@ -191,7 +191,6 @@ tic;
 modComp = compareModels(contrast, behavior, idx, models, options);
 fprintf('.done (%3.1f sec)\n', toc)
 printStats(models, modBoot, modComp, options);
-
 
 %%
 clear idx;
@@ -300,31 +299,31 @@ printStats(models, modBoot, modComp, options);
 %% All PPC curves together
 clear idx;
 idx{1} = idxF & idxRand & idxNone;
-idx{2} = idxF & idxRand & idxBoth & isPPC;
-idx{3} = idxF & idxRand & idxLeft & isPPC;
-idx{4} = idxF & idxRand & idxRight & isPPC;
-options.color = {'k', 'c', 'r', 'b'};
-options.groupNames = {'none', 'both', 'left', 'right'};
+idx{2} = idxF & idxRand & idxLeft & isPPC;
+idx{3} = idxF & idxRand & idxRight & isPPC;
+options.color = {'k', 'r', 'b'};
+options.groupNames = {'none', 'left', 'right'};
 options.title = 'All PPC Trials';
 options.nSims = nSims;
 options.nBootSims = nBootSims;
 options.bootParams = [1 1 1 1];
-options.testParams = [2 1 2 2];
+options.testParams = [1 2 1 1];
 % parames are: [threshold, slope, guessRate, lapseRate]
 % 1 - this parameter will be tested
 % 0 - this parameter will be completely unconstrained
 % 2 - this parameter will be always constrained between two models 
 models = analyzeAndPlot(contrast, behavior, idx, options);
 % 
-% fprintf('Bootstrapping..');
-% tic;
-% modBoot = modelBoot(contrast, behavior, idx, models, options);
-% fprintf('.done (%3.1f sec)\n', toc)
-% fprintf('Likelihood ratio comparison with Monte-Carlo..');
-% tic;
+fprintf('Bootstrapping..');
+tic;
+modBoot = modelBoot(contrast, behavior, idx, models, options);
+fprintf('.done (%3.1f sec)\n', toc)
+fprintf('Likelihood ratio comparison with Monte-Carlo..');
+tic;
 % modComp = compareModels(contrast, behavior, idx, models, options);
-% fprintf('.done (%3.1f sec)\n', toc)
-% printStats(models, modBoot, modComp, options);
+modComp = compareMultipleModels(contrast, behavior, idx, models, options);
+fprintf('.done (%3.1f sec)\n', toc)
+printStats(models, modBoot, modComp, options);
 
 %% All V1 curves together
 clear idx;
