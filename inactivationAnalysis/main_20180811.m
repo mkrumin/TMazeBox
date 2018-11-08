@@ -5,26 +5,26 @@ clear;
 list = struct();
 iList = 0;
 
-% iList = iList + 1;
-% list(iList).animalName = 'MK027';
-% list(iList).startDate = '2017-11-08';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {'2000-01-01'};
-% list(iList).excludeSession = {};
+iList = iList + 1;
+list(iList).animalName = 'MK027';
+list(iList).startDate = '2017-11-08';
+list(iList).endDate = '2020-12-01';
+list(iList).excludeDate = {'2000-01-01'};
+list(iList).excludeSession = {};
 % % 
-% iList = iList + 1;
-% list(iList).animalName = 'JC001';
-% list(iList).startDate = '2018-04-01';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {'2018-06-19'};
-% list(iList).excludeSession = {}; %date_session_name(expRef)
-% 
-% iList = iList + 1;
-% list(iList).animalName = 'JC003';
-% list(iList).startDate = '2018-04-11';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {'2018-04-12', '2018-04-19'};
-% list(iList).excludeSession = {'2018-05-01_2154_JC003', '2018-05-22_1353_JC003'};
+iList = iList + 1;
+list(iList).animalName = 'JC001';
+list(iList).startDate = '2018-04-01';
+list(iList).endDate = '2020-12-01';
+list(iList).excludeDate = {'2018-06-19'};
+list(iList).excludeSession = {}; %date_session_name(expRef)
+
+iList = iList + 1;
+list(iList).animalName = 'JC003';
+list(iList).startDate = '2018-04-11';
+list(iList).endDate = '2020-12-01';
+list(iList).excludeDate = {'2018-04-12', '2018-04-19'};
+list(iList).excludeSession = {'2018-05-01_2154_JC003', '2018-05-22_1353_JC003'};
 
 % list(iList).startDate = '2018-05-17'; % this is the first day V1 was inactivated
 % list(iList).endDate = '2020-12-01';
@@ -32,35 +32,35 @@ iList = 0;
 % % added one session to exclude where V1 was not inactivated yet
 % list(iList).excludeSession = {'2018-05-01_2154_JC003', '2018-05-22_1353_JC003', '2018-05-17_1353_JC003'};
 
-% iList = iList + 1;
-% list(iList).animalName = 'JC004';
-% list(iList).startDate = '2018-05-24';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {};
-% list(iList).excludeSession = {'2018-05-30_1117_JC004', '2018-06-05_1019_JC004', '2018-06-06_1043_JC004' }; %date_session_name(expRef)
+iList = iList + 1;
+list(iList).animalName = 'JC004';
+list(iList).startDate = '2018-05-24';
+list(iList).endDate = '2020-12-01';
+list(iList).excludeDate = {};
+list(iList).excludeSession = {'2018-05-30_1117_JC004', '2018-06-05_1019_JC004', '2018-06-06_1043_JC004' }; %date_session_name(expRef)
 
+iList = iList + 1;
+list(iList).animalName = 'MK032';
+list(iList).startDate = '2018-08-01';
+% list(iList).startDate = '2018-10-22';
+list(iList).endDate = '2020-12-01';
+list(iList).excludeDate = {};
+list(iList).excludeSession = {}; %date_session_name(expRef)
+
+iList = iList + 1;
+list(iList).animalName = 'MK033';
+list(iList).startDate = '2018-08-01';
+list(iList).endDate = '2020-12-01';
+list(iList).excludeDate = {};
+list(iList).excludeSession = {}; %date_session_name(expRef)
+
+% this is a control (ChR-negative) animal
 iList = iList + 1;
 list(iList).animalName = 'MK031';
 list(iList).startDate = '2018-08-01';
 list(iList).endDate = '2020-12-01';
 list(iList).excludeDate = {};
 list(iList).excludeSession = {}; %date_session_name(expRef)
-
-% iList = iList + 1;
-% list(iList).animalName = 'MK032';
-% list(iList).startDate = '2018-08-01';
-% % list(iList).startDate = '2018-10-22';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {};
-% list(iList).excludeSession = {}; %date_session_name(expRef)
-% 
-% iList = iList + 1;
-% list(iList).animalName = 'MK033';
-% list(iList).startDate = '2018-08-01';
-% list(iList).endDate = '2020-12-01';
-% list(iList).excludeDate = {};
-% list(iList).excludeSession = {}; %date_session_name(expRef)
-
 
 %%
 fprintf('Getting the list of experiments..');
@@ -126,11 +126,11 @@ nBootSims = 10;
 %% Plotting distribution of thetas at laser stim onset
 % all the session and trials are taken into account
 figure('name', options.figName, 'Color', [1 1 1]);
-histogram(thPreStim);
-xlabel('Median-corrected \theta');
+histogram(thPreStim, 'FaceColor', [0.3 0.3 0.3]);
+xlabel('Median-corrected \theta [deg]');
 ylabel('# trials');
 title('\theta at inactivation onset');
-xlim([-80 80]);
+xlim([-50 50]);
 ax = gca;
 ax.FontSize = 16;
 box off;
@@ -200,7 +200,50 @@ idx{2} = idxF & idxRand & idxRight & isPPC & isUndecided;
 options.color = {'r', 'b'};
 options.groupNames = {'left', 'right'};
 options.title = 'Undecided PPC Trials';
-analyzeAndPlot(contrast, behavior, idx, options);
+options.nSims = nSims;
+options.nBootSims = nBootSims;
+options.bootParams = [1 1 1 1];
+options.testParams = [2 2 1 1];
+% parames are: [threshold, slope, guessRate, lapseRate]
+% 1 - this parameter will be tested
+% 0 - this parameter will be completely unconstrained
+% 2 - this parameter will be always constrained between two models 
+models = analyzeAndPlot(contrast, behavior, idx, options);
+fprintf('Bootstrapping..');
+tic;
+modBoot = modelBoot(contrast, behavior, idx, models, options);
+fprintf('.done (%3.1f sec)\n', toc)
+fprintf('Likelihood ratio comparison with Monte-Carlo..');
+tic;
+modComp = compareModels(contrast, behavior, idx, models, options);
+fprintf('.done (%3.1f sec)\n', toc)
+printStats(models, modBoot, modComp, options);
+
+%%
+clear idx;
+idx{1} = idxF & idxRand & idxLeft & isPPC & ~isUndecided;
+idx{2} = idxF & idxRand & idxRight & isPPC & ~isUndecided;
+options.color = {'r', 'b'};
+options.groupNames = {'left', 'right'};
+options.title = 'Decided PPC Trials';
+options.nSims = nSims;
+options.nBootSims = nBootSims;
+options.bootParams = [1 1 1 1];
+options.testParams = [2 2 1 1];
+% parames are: [threshold, slope, guessRate, lapseRate]
+% 1 - this parameter will be tested
+% 0 - this parameter will be completely unconstrained
+% 2 - this parameter will be always constrained between two models 
+models = analyzeAndPlot(contrast, behavior, idx, options);
+fprintf('Bootstrapping..');
+tic;
+modBoot = modelBoot(contrast, behavior, idx, models, options);
+fprintf('.done (%3.1f sec)\n', toc)
+fprintf('Likelihood ratio comparison with Monte-Carlo..');
+tic;
+modComp = compareModels(contrast, behavior, idx, models, options);
+fprintf('.done (%3.1f sec)\n', toc)
+printStats(models, modBoot, modComp, options);
 
 %%
 clear idx;
@@ -210,7 +253,7 @@ options.color = {'r', 'b'};
 options.groupNames = {'left', 'right'};
 options.title = 'All V1 Trials';
 options.nSims = nSims;
-options.nBootSims = 100; nBootSims;
+options.nBootSims = nBootSims;
 options.bootParams = [1 1 1 1];
 options.testParams = [2 2 1 1];
 % parames are: [threshold, slope, guessRate, lapseRate]

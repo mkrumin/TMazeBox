@@ -4,12 +4,16 @@ hFig = figure('name', [options.figName , options.title], 'Color', [1 1 1]);
 hFig.Position = [400 250, 700, 500];
 xl = {'Threshold [%]', 'Slope [1/%]', 'Lapse Rate L', 'Lapse Rate R'};
 parNames = {'Threshold', 'Slope', 'Lapse L', 'Lapse R'};
-nBins = 10;
+nBins = 30;
 for iPar=1:4
     ax = subplot(2, 2, iPar);
-    histogram(modBoot(1).paramSim(:, iPar), 'FaceColor', options.color{1})
+    idx1 = modBoot(1).converged;
+    idx2 = modBoot(2).converged;
+    allVals = cat(1, modBoot(1).paramSim(idx1, iPar), modBoot(2).paramSim(idx2, iPar));
+    edges = linspace(min(allVals), max(allVals), nBins + 1);
+    histogram(modBoot(1).paramSim(idx1, iPar), edges, 'FaceColor', options.color{1})
     hold on;
-    histogram(modBoot(2).paramSim(:, iPar), 'FaceColor', options.color{2})
+    histogram(modBoot(2).paramSim(idx2, iPar), edges, 'FaceColor', options.color{2})
     %     histogram(modBoot(1).paramSim(:, iPar), nBins, 'FaceColor', options.color{1})
     %     hold on;
     %     histogram(modBoot(2).paramSim(:, iPar), nBins, 'FaceColor', options.color{2})
