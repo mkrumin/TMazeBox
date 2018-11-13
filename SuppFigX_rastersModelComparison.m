@@ -59,6 +59,15 @@ groupName = {'AAV', '3tg', 'VGlut', 'All mice'};
 groupName{nGroups+1} = 'All mice';
 groups2plot = 1:length(groupName);
 
+allAnimalNames = {'MK012'; 'MK014'; 'MK020'; 'MK022'; 'MK023'; 'JL005'; 'JL008'};
+hf = figure;
+hPlot = plot(1, 1);
+allMarkers = set(hPlot, 'Marker');
+[~, ia] = setdiff(allMarkers, {'.', 'none', 'v'});
+allMarkers = allMarkers(sort(ia));
+close(hf);
+
+
 %% analysis
 
 % tic
@@ -73,17 +82,17 @@ groups2plot = 1:length(groupName);
 %             warning(sprintf('failed to load %s \n', files{iGroup}(iFile).name))
 %             continue
 %         end
-%         
+%
 %         res{iGroup}(iFile) = getRhoEV_wAuROC(TM);
-%         
+%
 %         resFileName = fullfile(folder, 'SuppFigX_rhoev_wAuROC.mat');
 %         save(resFileName, 'res');
 %     end
 % end
-% 
+%
 % resFileName = fullfile(folder, 'SuppFigX_rhoev_wAuROC.mat');
 % save(resFileName, 'res');
-% 
+%
 % toc
 
 %% load data
@@ -251,7 +260,7 @@ end
 
 %% plot session-by-session summary
 
-axesLims = [-.05 .5];
+axesLims = [-.05 .45];
 ticks = [0:0.1:0.5];
 histEdges = axesLims(1):0.05:axesLims(2);
 binC = (histEdges(1:end-1) + histEdges(2:end))/2;
@@ -262,14 +271,15 @@ groups2plot = 4;
 nGroups = length(resFull);
 plotType = 'median'; % {'mean', 'median', 'meanstd', 'medianprc'}
 
-figName = sprintf('%s, %s', groupName{iGroup}, whatData);
-hFig = figure('Name', figName, 'Position', [300 200 1200 800]);
 nRows = 2;
 nColumns = 3;
 
 for iGroup = groups2plot
+    figName = sprintf('%s, %s', groupName{iGroup}, whatData);
+    hFig = figure('Name', figName, 'Position', [300 200 1200 800]);
     
-    for iSession = 1:length(resFull{iGroup})
+    nSessions = length(resFull{iGroup});
+    for iSession = 1:nSessions
         rhoZThD = resFull{iGroup}(iSession).rhoZThD;
         rhoZTh = resFull{iGroup}(iSession).rhoZTh;
         rhoZD = resFull{iGroup}(iSession).rhoZD;
@@ -284,27 +294,36 @@ for iGroup = groups2plot
         nSelectedCells = sum(idx);
         
         ax = subplot(nRows, nColumns, 1);
-        plotSbySSummary(ax, rhoZTh(idx), rhoZD(idx), plotType, axesLims)
+        hPlot = plotSbySSummary(ax, rhoZTh(idx), rhoZD(idx), plotType, axesLims);
+        animalNumber = find(strcmp(dat.parseExpRef(resFull{iGroup}(iSession).ExpRef), allAnimalNames));
+        hPlot.Marker = allMarkers{animalNumber};
+        hPlot.Color = 'k';
         xlabel('\rho_{z,\theta}');
         ylabel('\rho_{z,d}')
         box off;
-        %         text(axesLims(1)+0.1, 0.9, sprintf('nCells = %1.0f', nSelectedCells), ...
-        %             'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'FontSize', 16)
+        if iSession == 1
+            text(axesLims(1)+0.05, axesLims(2)-0.05, sprintf('n = %1.0f', nSessions), ...
+                'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'FontSize', 16)
+        end
         ax.FontSize = fontSize;
         ax.XTick = ticks;
         
         ax = subplot(nRows, nColumns, 2);
-        plotSbySSummary(ax, rhoZThD(idx), rhoZTh(idx), plotType, axesLims)
-        xlabel('\rho_{z,d,\theta}')
-        ylabel('\rho_{z,\theta}');
+        hPlot = plotSbySSummary(ax, rhoZTh(idx), rhoZThD(idx), plotType, axesLims);
+        hPlot.Marker = allMarkers{animalNumber};
+        hPlot.Color = 'k';
+        xlabel('\rho_{z,\theta}')
+        ylabel('\rho_{z,\theta, d}');
         title(figName);
         ax.FontSize = fontSize;
         ax.XTick = ticks;
         box off;
         
         ax = subplot(nRows, nColumns, 3);
-        plotSbySSummary(ax, rhoZThD(idx), rhoZD(idx), plotType, axesLims)
-        xlabel('\rho_{z,d,\theta}');
+        hPlot = plotSbySSummary(ax, rhoZThD(idx), rhoZD(idx), plotType, axesLims);
+        hPlot.Marker = allMarkers{animalNumber};
+        hPlot.Color = 'k';
+        xlabel('\rho_{z,\theta,d}');
         ylabel('\rho_{z,d}')
         ax.FontSize = fontSize;
         ax.XTick = ticks;
@@ -314,7 +333,9 @@ for iGroup = groups2plot
         nSelectedCells = sum(idx);
         
         ax = subplot(nRows, nColumns, 4);
-        plotSbySSummary(ax, evZTh(idx), evZD(idx), plotType, axesLims)
+        hPlot = plotSbySSummary(ax, evZTh(idx), evZD(idx), plotType, axesLims);
+        hPlot.Marker = allMarkers{animalNumber};
+        hPlot.Color = 'k';
         xlabel('EV_{z,\theta}');
         ylabel('EV_{z,d}')
         box off;
@@ -324,15 +345,19 @@ for iGroup = groups2plot
         ax.XTick = ticks;
         
         ax = subplot(nRows, nColumns, 5);
-        plotSbySSummary(ax, evZThD(idx), evZTh(idx), plotType, axesLims)
-        xlabel('EV_{z,d,\theta}')
-        ylabel('EV_{z,\theta}');
+        hPlot = plotSbySSummary(ax, evZTh(idx), evZThD(idx), plotType, axesLims);
+        hPlot.Marker = allMarkers{animalNumber};
+        hPlot.Color = 'k';
+        xlabel('EV_{z,\theta}')
+        ylabel('EV_{z,\theta},d');
         ax.FontSize = fontSize;
         ax.XTick = ticks;
         box off;
         
         ax = subplot(nRows, nColumns, 6);
-        plotSbySSummary(ax, evZThD(idx), evZD(idx), plotType, axesLims)
+        hPlot = plotSbySSummary(ax, evZThD(idx), evZD(idx), plotType, axesLims);
+        hPlot.Marker = allMarkers{animalNumber};
+        hPlot.Color = 'k';
         xlabel('EV_{z,d,\theta}');
         ylabel('EV_{z,d}')
         ax.FontSize = fontSize;
@@ -340,6 +365,12 @@ for iGroup = groups2plot
         box off;
     end
 end
+
+figure
+subplot(1, 2, 1)
+title(allAnimalNames)
+subplot(1, 2, 2)
+title(allMarkers(1:length(allAnimalNames)))
 
 %% plot densities with histograms
 
@@ -590,7 +621,7 @@ for iGroup = groups2plot
     box off
     ax.YTick = [];
     ax.YTickLabel = '';
-
+    
     dRho = rhoZThD(idx)-rhoZD(idx);
     figure;
     ax = subplot(1, 1, 1);
@@ -610,7 +641,7 @@ for iGroup = groups2plot
     box off
     ax.YTick = [];
     ax.YTickLabel = '';
-
+    
 end
 
 %% plot marginal histograms for different genotypes
@@ -759,7 +790,7 @@ for iAnimal = 1:nAnimals
         nCells, rhoMedian(iAnimal), rhoMAD(iAnimal)), ...
         'HorizontalAlignment', 'right', 'VerticalAlignment', 'top', 'FontSize', 16)
     ax.FontSize = fontSize;
-%     title({animalNames{iAnimal}; sprintf('%4.2f\\pm%4.2f (med\\pmmad)', rhoMedian(iAnimal), rhoMAD(iAnimal))})
+    %     title({animalNames{iAnimal}; sprintf('%4.2f\\pm%4.2f (med\\pmmad)', rhoMedian(iAnimal), rhoMAD(iAnimal))})
     title(animalNames{iAnimal});
     ax.YTick = [];
     

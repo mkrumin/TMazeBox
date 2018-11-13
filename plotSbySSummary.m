@@ -1,10 +1,10 @@
-function plotSbySSummary(hAx, xx, yy, plotType, axesLims)
+function hPlot = plotSbySSummary(hAx, xx, yy, plotType, axesLims)
 
 switch plotType
     case 'mean'
-        plot(mean(xx), mean(yy), 'o')
+        hPlot = plot(mean(xx), mean(yy), 'o');
     case 'median'
-        plot(median(xx), median(yy), 'o')
+        hPlot = plot(median(xx), median(yy), 'o');
     case 'meanstd'
         xMean = mean(xx);
         xNeg = std(xx);
@@ -18,6 +18,7 @@ switch plotType
         er.MarkerFaceColor = er.MarkerEdgeColor;
         er.LineStyle = ':';
         er.LineWidth = 0.25;
+        hPlot = er;
     case 'medianprc'
         xPr = prctile(xx, [25 50 75]);
         xData = xPr(2);
@@ -33,12 +34,13 @@ switch plotType
         er.MarkerFaceColor = er.MarkerEdgeColor;
         er.LineStyle = ':';
         er.LineWidth = 0.25;
+        hPlot = er;
     otherwise
 end
 
 hold on;
-plot(axesLims, axesLims, 'k:');
+plot(axesLims, axesLims, 'k--');
 axis equal
 xlim(axesLims)
 ylim(axesLims)
-plot([0 0], axesLims, 'k:', axesLims, [0 0], 'k:');
+% plot([0 0], axesLims, 'k:', axesLims, [0 0], 'k:');
