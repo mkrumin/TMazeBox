@@ -120,8 +120,8 @@ options.figName = reshape([list.animalName], 5, []);
 options.figName = reshape([options.figName; repmat(' ', 1, length(list))], 1, []);
 
 options.fitPsycho = true;
-nSims = 100;
-nBootSims = 1000;
+nSims = 10;
+nBootSims = 10;
 
 %% Plotting distribution of thetas at laser stim onset
 % all the session and trials are taken into account
@@ -328,11 +328,11 @@ printStats(models, modBoot, modComp, options);
 %% All V1 curves together
 clear idx;
 idx{1} = idxF & idxRand & idxNone & isV1Session;
-idx{2} = idxF & idxRand & idxBoth & isV1 & isV1Session;
-idx{3} = idxF & idxRand & idxLeft & isV1 & isV1Session;
-idx{4} = idxF & idxRand & idxRight & isV1 & isV1Session;
-options.color = {'k', 'c', 'r', 'b'};
-options.groupNames = {'none', 'both', 'left', 'right'};
+% idx{2} = idxF & idxRand & idxBoth & isV1 & isV1Session;
+idx{2} = idxF & idxRand & idxLeft & isV1 & isV1Session;
+idx{3} = idxF & idxRand & idxRight & isV1 & isV1Session;
+options.color = {'k', 'r', 'b'};
+options.groupNames = {'none', 'left', 'right'};
 options.title = 'All V1 Trials';
 options.nSims = nSims;
 options.nBootSims = nBootSims;
